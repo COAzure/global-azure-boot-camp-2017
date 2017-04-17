@@ -1,0 +1,27 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "serverfarm_app_plan_name": {
+      "value": "gab2017-app-plan-dev"
+    },
+    "app_site_name_prefix": {
+      "value": "gab2017-site-dev"
+    },
+    "database_server_name_prefix": {
+      "value": "gab2017-db-server-dev"
+    },
+    "database_server_username": {
+      "value": "gab2017user-dev"
+    },
+    "app_webjobs_name_prefix": {
+      "value": "gab2017-webjobs-dev"
+    },
+    "storageaccount_name_prefix": {
+      "value": "gab2017dev"
+    },
+    "cognetive_services_name": {
+      "value": "gab2017-textanalytics-dev"
+    }
+  }
+}

@@ -1,0 +1,85 @@
+﻿@model Feedback.Web.Models.FeedbackListViewModel
+@{
+    ViewBag.Title = "Home Page";
+}
+
+@if (Model.SubmittedFeedbacks != null)
+{
+    <div class="jumbotron">
+        <h1>New feedback.</h1>
+        <p class="lead">Send us your feedback.</p>
+        @using (Html.BeginForm())
+        {
+            <div class="form-group">
+                @Html.LabelFor(m => m.EmailAddress)
+                @Html.ValidationMessageFor(m => m.EmailAddress)
+                @Html.TextBoxFor(m => m.EmailAddress, new { @class = "form-control", placeholder = "Enter email (optional)", aria_describedby = "emailHelp" })
+                <small id="emailHelp" class="form-text text-muted">Share an option email address.</small>
+            </div>
+            <div class="form-group">
+                @Html.LabelFor(m => m.Content)
+                @Html.ValidationMessageFor(m => m.Content)
+                @Html.TextAreaFor(m => m.Content, new { @class = "form-control", rows = "3" })
+            </div>
+            <button type="submit" class="btn btn-primary">Submit</button>
+        }
+    </div>
+    <div class="row">
+        <h2>Submitted feedback.</h2>
+        <div class="col-md-12">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>@Html.DisplayNameFor(m => m.EmailAddress)</th>
+                        <th>@Html.DisplayNameFor(m => m.Content)</th>
+                        @if (Model.AverageSubmittedSentiment.HasValue)
+                        {
+                            <th>@Html.DisplayNameFor(m => m.SentimentScore)</th>
+                        }
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var feedback in Model.SubmittedFeedbacks)
+                    {
+                        <tr>
+                            <td>@feedback.EmailAddress</td>
+                            <td>@feedback.Content</td>
+                            @if (Model.AverageSubmittedSentiment.HasValue)
+                            {
+                                <td>@(feedback.SentimentScore?.ToString() ?? "Computing...")</td>
+                            }
+                        </tr>
+                    }
+                </tbody>
+                @if (Model.AverageSubmittedSentiment.HasValue)
+                {
+                    <tfoot>
+                        <tr>
+                            <th />
+                            <td />
+                            <td>
+                                <strong>@Model.AverageSubmittedSentiment</strong>
+                            </td>
+                        </tr>
+                    </tfoot>
+                }
+            </table>
+        </div>
+    </div>
+}
+else
+{
+    <h1>Under construction...</h1>
+    <div class="row">
+        <div class="col-md-12">
+            <p>Congratulations, the site runs!</p>
+            <p>Stay tuned, after added to our Delivery Pipeline new capabilities will open up...</p>
+            <p>If the Delivery Pipeline is in place and has been deployed to Azure and you are still seeing this from the Azure deployment, something went very wrong. :(</p>
+        </div>
+    </div>
+}
+
+@section scripts {
+    <script src="~/Scripts/jquery.validate.min.js"></script>
+    <script src="~/Scripts/jquery.validate.unobtrusive.min.js"></script>
+}

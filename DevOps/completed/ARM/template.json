@@ -1,0 +1,288 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "datacenter_region": {
+      "defaultValue": "westus",
+      "type": "string"
+    },
+    "serverfarm_app_plan_name": {
+      "type": "string"
+    },
+    "serverfarm_app_plan_sku": {
+      "defaultValue": {
+        "name": "B1",
+        "tier": "Basic",
+        "size": "B1",
+        "family": "B",
+        "capacity": 1
+      },
+      "type": "object"
+    },
+    "serverfarm_app_plan_instances": {
+      "defaultValue": 1,
+      "type": "int"
+    },
+    "app_site_name_prefix": {
+      "type": "string"
+    },
+    "app_site_alwayson": {
+      "defaultValue": false,
+      "type": "bool"
+    },
+    "database_server_name_prefix": {
+      "type": "string"
+    },
+    "database_server_username": {
+      "type": "string"
+    },
+    "database_server_password": {
+      "type": "securestring"
+    },
+    "database_name": {
+      "defaultValue": "Feedback.Data.FeedbackDbContext",
+      "type": "string"
+    },
+    "database_edition": {
+      "defaultValue": "Basic",
+      "type": "string"
+    },
+    "database_fallback_datacenter_region": {
+      "defaultValue": "eastus2",
+      "type": "string"
+    },
+    "app_webjobs_name_prefix": {
+      "type": "string"
+    },
+    "storageaccount_name_prefix": {
+      "type": "string"
+    },
+    "storageaccount_sku": {
+      "type": "object",
+      "defaultValue": {
+        "name": "Standard_RAGRS",
+        "tier": "Standard"
+      }
+    },
+    "cognetive_services_name": {
+      "type": "string"
+    },
+    "cognetive_services_sku": {
+      "defaultValue": "S1",
+      "type": "string"
+    }
+  },
+  "variables": {
+    "app_site_name": "[concat(parameters('app_site_name_prefix'),'-',uniqueString(subscription().subscriptionId,resourceGroup().id))]",
+    "database_server_name": "[concat(parameters('database_server_name_prefix'),'-',uniqueString(subscription().subscriptionId,resourceGroup().id))]",
+    "database_qualified_name": "[concat(variables('database_server_name'),'/',parameters('database_name'))]",
+    "database_connection_string": "[concat('Server=',variables('database_server_name'),'.database.windows.net;Database=',parameters('database_name'),';User ID=',parameters('database_server_username'),';Password=',parameters('database_server_password'),';Trusted_Connection=False;Encrypt=True;Connection Timeout=30;')]",
+    "app_webjobs_name": "[concat(parameters('app_webjobs_name_prefix'),'-',uniqueString(subscription().subscriptionId,resourceGroup().id))]",
+    "storageaccount_name": "[concat(parameters('storageaccount_name_prefix'),uniqueString(subscription().subscriptionId,resourceGroup().id))]"
+  },
+  "resources": [
+    {
+      "type": "Microsoft.Web/serverfarms",
+      "sku": "[parameters('serverfarm_app_plan_sku')]",
+      "name": "[parameters('serverfarm_app_plan_name')]",
+      "apiVersion": "2015-08-01",
+      "location": "[parameters('datacenter_region')]",
+      "properties": {
+        "name": "[parameters('serverfarm_app_plan_name')]",
+        "numberOfWorkers": "[parameters('serverfarm_app_plan_instances')]"
+      },
+      "resources": [],
+      "dependsOn": []
+    },
+    {
+      "type": "Microsoft.Web/sites",
+      "name": "[variables('app_site_name')]",
+      "apiVersion": "2015-08-01",
+      "location": "[parameters('datacenter_region')]",
+      "properties": {
+        "name": "[variables('app_site_name')]",
+        "hostNames": [
+          "[concat(variables('app_site_name'),'.azurewebsites.net')]"
+        ],
+        "enabledHostNames": [
+          "[concat(variables('app_site_name'),'.azurewebsites.net')]",
+          "[concat(variables('app_site_name'),'.scm.azurewebsites.net')]"
+        ],
+        "hostNameSslStates": [
+          {
+            "name": "[concat(variables('app_site_name'),concat(variables('app_site_name'),'.azurewebsites.net'))]",
+            "sslState": 0,
+            "ipBasedSslState": 0
+          },
+          {
+            "name": "[concat(variables('app_site_name'),concat(variables('app_site_name'),'.scm.azurewebsites.net'))]",
+            "sslState": 0,
+            "ipBasedSslState": 0
+          }
+        ],
+        "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', parameters('serverfarm_app_plan_name'))]",
+        "siteConfig": {
+          "AlwaysOn": "[parameters('app_site_alwayson')]"
+        }
+      },
+      "resources": [
+        {
+          "name": "connectionstrings",
+          "type": "config",
+          "apiVersion": "2015-08-01",
+          "location": "[parameters('datacenter_region')]",
+          "properties": {
+            "DefaultConnection": {
+              "value": "[variables('database_connection_string')]",
+              "type": "SQLAzure"
+            }
+          },
+          "dependsOn": [
+            "[concat('Microsoft.Web/sites/',variables('app_site_name'))]"
+          ]
+        }
+      ],
+      "dependsOn": [
+        "[resourceId('Microsoft.Web/serverfarms', parameters('serverfarm_app_plan_name'))]"
+      ]
+    },
+    {
+      "type": "Microsoft.Sql/servers",
+      "kind": "v12.0",
+      "name": "[variables('database_server_name')]",
+      "apiVersion": "2014-04-01-preview",
+      "location": "[parameters('datacenter_region')]",
+      "properties": {
+        "administratorLogin": "[parameters('database_server_username')]",
+        "administratorLoginPassword": "[parameters('database_server_password')]",
+        "version": "12.0"
+      },
+      "resources": [],
+      "dependsOn": []
+    },
+    {
+      "type": "Microsoft.Sql/servers/databases",
+      "kind": "v12.0,user",
+      "name": "[variables('database_qualified_name')]",
+      "apiVersion": "2014-04-01-preview",
+      "location": "[parameters('datacenter_region')]",
+      "properties": {
+        "edition": "[parameters('database_edition')]",
+        "status": "Online",
+        "serviceLevelObjective": "Basic",
+        "collation": "SQL_Latin1_General_CP1_CI_AS",
+        "maxSizeBytes": "2147483648",
+        "currentServiceObjectiveId": "DD6D99BB-F193-4EC1-86F2-43D3BCCBC49C",
+        "requestedServiceObjectiveId": "DD6D99BB-F193-4EC1-86F2-43D3BCCBC49C",
+        "requestedServiceObjectiveName": "Basic",
+        "defaultSecondaryLocation": "[parameters('database_fallback_datacenter_region')]",
+        "containmentState": 2
+      },
+      "resources": [],
+      "dependsOn": [
+        "[resourceId('Microsoft.Sql/servers', variables('database_server_name'))]"
+      ]
+    },
+    {
+      "type": "Microsoft.Web/sites",
+      "kind": "WebApp",
+      "name": "[variables('app_webjobs_name')]",
+      "apiVersion": "2015-08-01",
+      "location": "[parameters('datacenter_region')]",
+      "properties": {
+        "name": "[variables('app_webjobs_name')]",
+        "hostNames": [
+          "[concat(variables('app_webjobs_name'),'.azurewebsites.net')]"
+        ],
+        "enabledHostNames": [
+          "[concat(variables('app_webjobs_name'),'.azurewebsites.net')]",
+          "[concat(variables('app_webjobs_name'),'.scm.azurewebsites.net')]"
+        ],
+        "hostNameSslStates": [
+          {
+            "name": "[concat(variables('app_webjobs_name'),variables('app_webjobs_name'),'.azurewebsites.net')]",
+            "sslState": 0,
+            "ipBasedSslState": 0
+          },
+          {
+            "name": "[concat(variables('app_webjobs_name'),variables('app_webjobs_name'),'.scm.azurewebsites.net')]",
+            "sslState": 0,
+            "ipBasedSslState": 0
+          }
+        ],
+        "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', parameters('serverfarm_app_plan_name'))]",
+        "siteConfig": {
+          "AlwaysOn": true
+        }
+      },
+      "resources": [
+        {
+          "name": "appsettings",
+          "type": "config",
+          "apiVersion": "2015-08-01",
+          "location": "[parameters('datacenter_region')]",
+          "tags": {
+            "displayName": "WebAppSettings"
+          },
+          "properties": {
+            "CognetiveServicesAccountKey": "[listKeys(resourceId('Microsoft.CognitiveServices/accounts', parameters('cognetive_services_name')), '2016-02-01-preview').key1]"
+          },
+          "dependsOn": [
+            "[concat('Microsoft.Web/sites/',variables('app_webjobs_name'))]"
+          ]
+        },
+        {
+          "name": "connectionstrings",
+          "type": "config",
+          "apiVersion": "2015-08-01",
+          "location": "[parameters('datacenter_region')]",
+          "properties": {
+            "DefaultConnection": {
+              "value": "[variables('database_connection_string')]",
+              "type": "SQLAzure"
+            },
+            "AzureWebJobsDashboard": {
+              "value": "[concat('DefaultEndpointsProtocol=https;AccountName=',variables('storageaccount_name'),';AccountKey=',listKeys(resourceId('Microsoft.Storage/storageAccounts',variables('storageaccount_name')),'2016-01-01').keys[0].value)]",
+              "type": "Custom"
+            },
+            "AzureWebJobsStorage": {
+              "value": "[concat('DefaultEndpointsProtocol=https;AccountName=',variables('storageaccount_name'),';AccountKey=',listKeys(resourceId('Microsoft.Storage/storageAccounts',variables('storageaccount_name')),'2016-01-01').keys[0].value)]",
+              "type": "Custom"
+            }
+          },
+          "dependsOn": [
+            "[concat('Microsoft.Web/sites/',variables('app_webjobs_name'))]"
+          ]
+        }
+      ],
+      "dependsOn": [
+        "[resourceId('Microsoft.Web/serverfarms',parameters('serverfarm_app_plan_name'))]"
+      ]
+    },
+    {
+      "type": "Microsoft.Storage/storageAccounts",
+      "sku": "[parameters('storageaccount_sku')]",
+      "kind": "Storage",
+      "name": "[variables('storageaccount_name')]",
+      "apiVersion": "2016-01-01",
+      "location": "[parameters('datacenter_region')]",
+      "tags": {},
+      "properties": {},
+      "resources": [],
+      "dependsOn": []
+    },
+    {
+      "name": "[parameters('cognetive_services_name')]",
+      "type": "Microsoft.CognitiveServices/accounts",
+      "apiVersion": "2016-02-01-preview",
+      "sku": {
+        "name": "[parameters('cognetive_services_sku')]"
+      },
+      "kind": "TextAnalytics",
+      "location": "[parameters('datacenter_region')]",
+      "tags": {},
+      "properties": {}
+    }
+  ],
+  "outputs": {}
+}
