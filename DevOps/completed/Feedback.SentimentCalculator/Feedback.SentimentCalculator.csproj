@@ -97,6 +97,8 @@
   <ItemGroup>
     <None Include="App.config" />
     <None Include="packages.config" />
+    <None Include="Properties\PublishProfiles\Release.pubxml" />
+    <None Include="Properties\webjob-publish-settings.json" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Feedback.Data\Feedback.Data.csproj">
