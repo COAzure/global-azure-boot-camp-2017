@@ -33,7 +33,7 @@ namespace Feedback.SentimentCalculator
 
         public static async Task TriggerCalculateSentimentAsync([TimerTrigger(Every1Minute, RunOnStartup = false)] TimerInfo info)
         {
-            using (var dbContext = new FeedbackDbContext())
+            using (var dbContext = FeedbackDbContext.Create())
             {
                 await CalculateSentimentAsync(dbContext);
             }

@@ -95,7 +95,8 @@ A [Delivery Pipeline](https://devops.com/continuous-delivery-pipeline/) is the c
 
 A Delivery Pipeline always starts with a build being triggered by some change in the system. This is refered to as a Continuous Integration (CI) build.
 
-Microsoft is currently rolling out a new build definition editor. If prompted, opt in to the new editor in order to have an experience consistent with these instructions.
+Microsoft is currently rolling out a new build definition editor. The screenshots in these instructions are for the old build definition editor. If you opt in to the new UI the look & feel will vary but the steps should approximately match. You can control which editor is in use via the **Preview features** panel.
+<br />![Preview features navigation](images/vsts-preview-features.png)
 
 1. Go back in VSTS, and go to the **Build & Release** section
 ![Build & Release menu item](images/vsts-build-release-menu-item.png)
@@ -113,15 +114,14 @@ Microsoft is currently rolling out a new build definition editor. If prompted, o
 <br />*NOTE:* This didn't actually create a build definion, but rather a template for a build definition. In the following steps you configure the build definition and save it.
 1. Select the **Build solution \*\*\\*.sln** build task
 <br />![Build solution build task](images/build-solution-build-task.png)
-1. Add the following to the MSBuild Arguments field: `/p:DeployOnBuild=true /p:PublishProfile=Release /p:WebPublishMethod=Package /p:PackageAsSingleFile=true /p:SkipInvalidConfigurations=true /p:PackageLocation=$(Build.ArtifactsStagingDirectory)\Feedback.Web.zip`
-<br />*NOTE:* These arguments tell Visual Studio to package the build outputs into clean and convenient little artifacts for release to Azure.
+1. Add the following to the MSBuild Arguments field: `/p:DeployOnBuild=true /p:PublishProfile=Release /p:WebPublishMethod=Package /p:PackageAsSingleFile=true /p:SkipInvalidConfigurations=true /p:PackageLocation=$(Build.StagingDirectory)`
+<br />*NOTE:* These arguments tell Visual Studio to package the build outputs into clean and convenient little artifacts for release to Azure. There was also a bit of magic done for you in creating the "Release" publish profile, which should be familiar to anyone who is used to ASP.NET projects and is not specific to this lab.
 <br />![MSBuild arguments field](images/msbuild-arguments.png)
 1. Select the **Test Assemblies \*\*\\$(BuildConfiguration)\\\*test\*.dll;-:\*\*\\obj\\\*\*** build task
 1. Expand **Advanced Execution Options** and set the VSTest version to **Latest**
 <br />![VSTest version update](images/vstest-version-setting.png)
-1. Delete the **Copy Files to: $(build.artifactstagingdirectory)** build task
-<br />*NOTE:* We already told MSBuild to deploy the built packages to this location.
-<br />![Copy artifacts build task](images/copy-artifacts-build-task.png)
+1. Select the **Copy Files to: $(build.artifactstagingdirectory)** build task
+1. Change the **Source Folder** to "$(Build.StagingDirectory)" and **Contents** to "**\\*"
 1. Click **Add build step** above the task list
 1. In the **Build catalog** window, select **Utility**, find **Publish Build Artifacts** and click **Add**
 <br />![Add publish build artifacts task](images/add-publish-build-artifacts-task.png)
@@ -140,16 +140,72 @@ Your CI build is now created and any future commits into the source repository w
 
 The build should complete successfully.
 
-### 2.b Creating the Release Definition
+### 2.b Linking VSTS to your Azure Subscription
+
+VSTS needs to have access to your Azure subscription in order to automate the tasks of provisioning resources and deploying your applications.
+
+Follow [these instructions](https://blogs.msdn.microsoft.com/visualstudioalm/2015/10/04/automating-azure-resource-group-deployment-using-a-service-principal-in-visual-studio-online-buildrelease-management/). If used the same credentials as you have for your Azure subscription you should be able to follow the simple **Connect your Azure subscriptions to VSTS in 3 clicks** flow. If not, or you otherwise don't see your subscription, you will need to perform the more cumbersome flow under **Manual configuration**.
+<br />*TIP:* Make sure you watch for popup blocker notifications to authenticate into Azure as part of the linking process.
+
+### 2.c Creating the Release Definition
 
 1. While in the **Build & Release** section of VSTS, click the **Releases** tab
 ![Releases menu item](images/releases-menu-item.png)
 1. Because you don't have any release definitions, you're only option is to click **New definition**
-1. Select the **Azure App Service Deployment** option and click **Next**
+1. Select the **Empty** option and click **Next** (the default templates are skimpy for what we need to do)
 1. Check the **Continuous deployment (create release and deploy whenever a build completes)** option and click **Create**
 <br />*NOTE:* Again, this didn't actually create the release definition but got us started with a template.
-1. ........................................................
-1000. Click **Deploy** to execute the release. This will take some time to provision all the resources in your Azure subscription.
+1. Rename the initial environment to "Prod"
+<br />*TIP:* It may sound counter-intuitive, but I usually suggest to start a new solutions with production. It is amazing the number of last-minute issues that are avoided if from day-1 you know you can deploy to production. Also, like branching, the more environments you have the more complexity you have to manage throughout development. Since you *know* you have to have a production, start there, and add environments as you can justify their cost in complexity.
+<br />![Rename environment](images/rename-environment.png)
+1. Click the elipses (...) next to the enviornment name, and select the **Configure variables* context-menu item
+1. Add variable name "dbPassword" with a value that meets the Azure database strength rules, click the padlock to encrypt and secure the variable value, and click **OK**
+![Entering db password release variable](images/db-password-enviornment-variable.png)
+1. Click **Add tasks**
+1. Find task **Azure Resource Group Deployment**, click **Add**, click **Close**, and configure the task as follows:
+   * Select the subscription you linked to VSTS
+   * Action should be **Create or update resource group**
+   * Enter "GAB2017" as the **Resource group**
+   * Enter "West US" as the **Location**
+   * Enter "$(System.DefaultWorkingDirectory)/GAB2017 CI/arm/template.json" as the **Template**
+   * Enter "$(System.DefaultWorkingDirectory)/GAB2017 CI/arm/prod.json" as the **Template parameters**
+   * Enter "-database_server_password $(dbPassword)" in **Override template parameters**
+   <br />*NOTE:* As a general rule, you should never have secrets such as passwords in source control. Because the ARM template and parameter files are in source control, we must provide this parameter explicitly. The value "$(dbPassword)" refers to the VSTS environment variable created earlier.
+   * Change the **Deployment mode** to **Validation only**
+1. Add another **Azure Resource Group Deployment** task and configure it exactly as the first one, except set the **Deployment mode** to **Incremental**
+<br />*NOTE:* Because provisioning resources can take some time, it is convenient to have a task to fail-fast out of the release pipeline if there is an obvious bug in the ARM template. This is the function of the **Validation only** task. **Incremental** ensures that the defined resources are always kept in-sync in Azure. In addition to initially creating the resource group, as new resources are added to the template they are added to Azure. This will be apparent later in this lab.
+1. Add task **Azure PowerShell** and configure the task as follows:
+   * Change **Azure Connection Type** to **Azure Resource Manager**
+   * Select the subscription you linked to VSTS
+   * Change **Script Type** to **Inline Script**
+   * Add the following **Inline Script** text:
+    ```
+    $apps = Get-AzureRmWebApp
+    foreach ($app in $apps)
+    {
+      $appName = $app.Name
+      if ($appName.StartsWith('gab2017-site-'))
+      {
+        Write-Host ("Found app service: $appName")
+        Write-Output ("##vso[task.setvariable variable=appServiceName;]$appName")
+      }
+    }
+    ```
+    <br />*NOTE:* The ARM template dynamically computes many of its resource names, including the DNS name of the app service to deploy to. This bit of script queries Azure for the full name of the desired app service based on a known prefix. The odd-looking `Write-Host` argument is how we store data to a VSTS variable for use by future tasks.
+    <br />*TIP:* In the case of this lab, this is to make sure multiple people can work the lab at the same time without DNS conflicts, but this is actually a common practice in DevOps. The idea is to treat servers like cattle rather than pets...and you generally don't name your cattle in a meaningful name. 
+1. Add task **Azure App Service Deploy** and configure the task as follows:
+   * Select the subscription you linked to VSTS
+   * Enter "$(appServiceName)" as the **App service name** (this is the variable captured by the PowerShell script)
+   * Update the **Package or folder** to "$(System.DefaultWorkingDirectory)/GAB2017 CI/drop/Feedback.Web.zip"
+1. Save the release definition
+1. Click the **Release** pull-down button next to the now-disabled **Save** button, select **Create Release** and click **Create** in the modal dialog
+1. To watch progress of the release:
+   * Click the **Release-#** link
+   <br />![Running release link](images/running-release-link.png)
+   * Click the **Logs** tab
+   <br />![Logs tab](images/release-logs-tab.png)
+
+This will take some time to provision all the resources in your Azure subscription and deploy the application.
 
 While you wait, take a moment to examine the ARM template. Open file **ARM/template.json** in the Visual Studio solution. Since this was all done for you, it is helpful to know where you can get information about what goes into the template. The links under the **Template format** columns [here](https://docs.microsoft.com/en-us/azure/azure-resource-manager/resource-manager-supported-services) are a great resource for creating and expanding your own ARM templates from scratch.
 
@@ -158,6 +214,8 @@ You can explore the basics of ARM templates on your own, but for the purpose of 
 - The region (paramater **datacenter_region**) is set to **westus**. This is because later we will use a preview feature of Cognitive Services that is only available in that region.
 - Any parameter that needs to be globally unique via DNS is actually a prefix, which we then append a [uniqueString](https://docs.microsoft.com/en-us/azure/azure-resource-manager/resource-group-template-functions#uniquestring) to. This is to prevent people in the lab from conflicting with each other as resources are created. Refer to the variable **app_site_name** as an example.
 - The App Service plan is scaled at **B1** instead of using the free tier so we can use [Always On in order to run a Web Job that will be added later continuously](https://docs.microsoft.com/en-us/azure/app-service-web/web-sites-create-web-jobs#a-namecreatescheduledcronacreate-a-scheduled-webjob-using-a-cron-expression).
+
+By now the release should have finished successfully. You can visit the site at gab2017-site-{random-value}.azurewebsites.net. (look at the log output from the **Azure PowerShell** release task to know your full site name). The site may take a while to "wake up", but after it finishes you should be able to successfully submit feedback records.
 
 ## 3. Adding a New Environment
 
@@ -195,3 +253,19 @@ Notice we didn't actually create anything while in the portal. The best DevOps t
 ### 4.c Adding the Web Job Project
 
 1. tbd...
+
+
+
+
+# JUNK DRAWER
+
+
+
+
+1. Click the **Variables** tab of the release
+![Release variables tab](images/release-variables-tab.png)
+1. Switch from release variables to environment variables
+<br />*NOTE:* Release variable apply across environments. Environment variables can have distinct values configured for each environment. In this case, we will enable having a different database password in different environments. In this way, you can ensure that people with the password to one environment can't necessarily access the database of another.
+![Switching to environment variables](images/switching-from-release-to-environment-variables.png)
+1. Add variable name "dbPassword" with a value that meets the Azure database strength rules, and click the padlock to encrypt and secure the variable value
+1. Enter a 

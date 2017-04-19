@@ -77,6 +77,14 @@ else
             <p>If the Delivery Pipeline is in place and has been deployed to Azure and you are still seeing this from the Azure deployment, something went very wrong. :(</p>
         </div>
     </div>
+    <div class="row">
+        <div class="col-md-12">
+            <p>-------------------------------------</p>
+            <pre>
+@ViewData["Message"]
+            </pre>
+        </div>
+    </div>
 }
 
 @section scripts {

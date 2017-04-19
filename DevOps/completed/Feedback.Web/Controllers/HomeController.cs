@@ -24,7 +24,7 @@ namespace Feedback.Web.Controllers
         public ActionResult Index()
         {
             var viewModel = new FeedbackListViewModel();
-            using (var dbContext = new FeedbackDbContext())
+            using (var dbContext = FeedbackDbContext.Create())
             {
                 try
                 {
@@ -34,6 +34,8 @@ namespace Feedback.Web.Controllers
                 catch (Exception e)
                 {
                     Debug.WriteLine($"Could not initialize database, probably because it doesn't exist yet. It'll get created by the VSTS Delivery Pipeline!\r\n{e}");
+                    // NOTE: Obviously in real systems you wouldn't emit your connection string for the world to see! :)
+                    ViewData["Message"] = $"Attempted using connection string: {dbContext.Database.Connection.ConnectionString}\r\n{e.ToString()}";
                 }
             }
             return View(viewModel);
@@ -42,7 +44,7 @@ namespace Feedback.Web.Controllers
         [HttpPost]
         public ActionResult Index(FeedbackViewModel submitModel)
         {
-            using (var dbContext = new FeedbackDbContext())
+            using (var dbContext = FeedbackDbContext.Create())
             {
                 if (ModelState.IsValid)
                 {
