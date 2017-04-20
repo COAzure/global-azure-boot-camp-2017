@@ -12,7 +12,7 @@ An important concept in the Ops part of DevOps is operational support. Azure pro
 
 **Lab Tasks**:
 1. [Setting Up VSTS](#1-setting-up-vsts)
-1. [Setting Up the Delivery Pipelines](#2-setting-up-the-delivery-pipelines)
+1. [Setting Up the Delivery Pipelines](#2-setting-up-the-delivery-pipeline)
 1. [Adding a New Environment](#3-adding-a-new-environment)
 1. [Adding New Resources and Deployable](#4-adding-new-resources-and-deployable)
 
@@ -52,7 +52,7 @@ The project sources are currently in this GitHub repository. VSTS allows you to 
 Instead, we will use the Git repository within the VSTS repository so will copy the sources over.
 <br />*NOTE:* You can also push existing repositories into VSTS rather than the below method.
 
-1. First, if you haven't already, [clone this GitHub repository](https://help.github.com/articles/cloning-a-repository/) to your machine
+1. First, if you haven't already, this GitHub repository to your machine ([instructions](https://help.github.com/articles/cloning-a-repository/))
 1. Go back in VSTS, and return to the **Code** section
 ![Work menu item](images/vsts-code-menu-item.png)
 1. Copy the HTTPS url to the Git repository
@@ -105,7 +105,7 @@ Microsoft is currently rolling out a new build definition editor. The screenshot
 1. Expand **Advanced Execution Options** and set the VSTest version to **Latest**
 <br />![VSTest version update](images/vstest-version-setting.png)
 1. Select the **Copy Files to: $(build.artifactstagingdirectory)** build task
-1. Change the **Source Folder** to "$(Build.StagingDirectory)" and **Contents** to "**\\*"
+1. Change the **Source Folder** to `$(Build.StagingDirectory)` and **Contents** to `**\*`
 1. Click **Add build step** above the task list
 1. In the **Build catalog** window, select **Utility**, find **Publish Build Artifacts** and click **Add**
 <br />![Add publish build artifacts task](images/add-publish-build-artifacts-task.png)
@@ -139,22 +139,22 @@ Follow [these instructions](https://blogs.msdn.microsoft.com/visualstudioalm/201
 1. Select the **Empty** option and click **Next** (the default templates are skimpy for what we need to do)
 1. Check the **Continuous deployment (create release and deploy whenever a build completes)** option and click **Create**
 <br />*NOTE:* Again, this didn't actually create the release definition but got us started with a template.
-1. Rename the initial environment to "Prod"
+1. Rename the initial environment to `Prod`
 <br />*TIP:* It may sound counter-intuitive, but I usually suggest to start a new solutions with production. It is amazing the number of last-minute issues that are avoided if from day-1 you know you can deploy to production. Also, like branching, the more environments you have the more complexity you have to manage throughout development. Since you *know* you have to have a production, start there, and add environments as you can justify their cost in complexity.
 <br />![Rename environment](images/rename-environment.png)
 1. Click the elipses (...) next to the enviornment name, and select the **Configure variables* context-menu item
-1. Add variable name "dbPassword" with a value that meets the Azure database strength rules, click the padlock to encrypt and secure the variable value, and click **OK**
+1. Add variable name `dbPassword` with a value that meets the Azure database strength rules, click the padlock to encrypt and secure the variable value, and click **OK**
 ![Entering db password release variable](images/db-password-enviornment-variable.png)
 1. Click **Add tasks**
 1. Find task **Azure Resource Group Deployment**, click **Add**, click **Close**, and configure the task as follows:
    * Select the subscription you linked to VSTS
    * Action should be **Create or update resource group**
-   * Enter "GAB2017" as the **Resource group**
-   * Enter "West US" as the **Location**
-   * Enter "$(System.DefaultWorkingDirectory)/GAB2017 CI/arm/template.json" as the **Template**
-   * Enter "$(System.DefaultWorkingDirectory)/GAB2017 CI/arm/prod.json" as the **Template parameters**
-   * Enter "-database_server_password $(dbPassword)" in **Override template parameters**
-   <br />*NOTE:* As a general rule, you should never have secrets such as passwords in source control. Because the ARM template and parameter files are in source control, we must provide this parameter explicitly. The value "$(dbPassword)" refers to the VSTS environment variable created earlier.
+   * Enter `GAB2017` as the **Resource group**
+   * Enter `West US` as the **Location**
+   * Enter `$(System.DefaultWorkingDirectory)/GAB2017 CI/arm/template.json` as the **Template**
+   * Enter `$(System.DefaultWorkingDirectory)/GAB2017 CI/arm/prod.json` as the **Template parameters**
+   * Enter `-database_server_password $(dbPassword)` in **Override template parameters**
+   <br />*NOTE:* As a general rule, you should never have secrets such as passwords in source control. Because the ARM template and parameter files are in source control, we must provide this parameter explicitly. The value `$(dbPassword)` refers to the VSTS environment variable created earlier.
    * Change the **Deployment mode** to **Validation only**
 1. Add another **Azure Resource Group Deployment** task and configure it exactly as the first one, except set the **Deployment mode** to **Incremental**
 <br />*NOTE:* Because provisioning resources can take some time, it is convenient to have a task to fail-fast out of the release pipeline if there is an obvious bug in the ARM template. This is the function of the **Validation only** task. **Incremental** ensures that the defined resources are always kept in-sync in Azure. In addition to initially creating the resource group, as new resources are added to the template they are added to Azure. This will be apparent later in this lab.
@@ -180,8 +180,8 @@ Follow [these instructions](https://blogs.msdn.microsoft.com/visualstudioalm/201
     <br />*TIP:* In the case of this lab, this is to make sure multiple people can work the lab at the same time without DNS conflicts, but this is actually a common practice in DevOps. The idea is to treat servers like cattle rather than pets...and you generally don't name your cattle in a meaningful name. 
 1. Add task **Azure App Service Deploy** and configure the task as follows:
    * Select the subscription you linked to VSTS
-   * Enter "$(appServiceName)" as the **App service name** (this is the variable captured by the PowerShell script)
-   * Update the **Package or folder** to "$(System.DefaultWorkingDirectory)/GAB2017 CI/drop/Feedback.Web.zip"
+   * Enter `$(appServiceName)` as the **App service name** (this is the variable captured by the PowerShell script)
+   * Update the **Package or folder** to `$(System.DefaultWorkingDirectory)/GAB2017 CI/drop/Feedback.Web.zip`
 1. Save the release definition
 1. Click the **Release** pull-down button next to the now-disabled **Save** button, select **Create Release** and click **Create** in the modal dialog
 1. To watch progress of the release:
@@ -215,9 +215,9 @@ So, this is great, we have a production environment. We have a few users in our 
 1. Click the ellipses for on the **Dev** environment and click **Configure variables**
 1. Right now the database password for dev and prod is the same, which may not be a good idea, so enter a new strong password for **Dev**
 *NOTE:* You have to "unlock" the value to change it. Be sure to lock it again to keep it secret.
-1. Select the first release task and change the **Resource group** from "GAB2017" to "GAB2017Dev" and **Template parameters** to `$(System.DefaultWorkingDirectory)/GAB2017 CI/arm/dev.json`
+1. Select the first release task and change the **Resource group** from "GAB2017" to `GAB2017Dev` and **Template parameters** to `$(System.DefaultWorkingDirectory)/GAB2017 CI/arm/dev.json`
 1. Repeat the last step for the second release task
-1. Select the third release task and update the first line of the **Inline Script** to assign "GAB2017Dev" to the **$resourceGroup** variable
+1. Select the third release task and update the first line of the **Inline Script** to assign `GAB2017Dev` to the **$resourceGroup** variable
 *TIP:* The above 3 steps could have been avoided if we had used an environment variable for the resource group name. In that way, we wouldn't have to change the individual steps for each environment, instead only changing the environment variable to have a distinct value for each environment, similar to what we did above for the database password.
 1. Click the **Triggers** tab
 1. Edit the **Environment triggers** so that **Dev** is automatic and **Prod** is manual
@@ -226,12 +226,12 @@ So, this is great, we have a production environment. We have a few users in our 
 
 ### 3.b Source Changes
 
-1. Add file "dev.json" within the **ARM** folder on disk
+1. Add file `dev.json` within the **ARM** folder on disk
 1. Go to Visual Studio with the Feedback.sln open
 *NOTE:* Solution folders in Visual Studio are completely logical. Unfortunately, if you want the file in the right place, you have to create it first then add it to Visual Studio.
-1. In Solution Explorer, right click on the **ARM** folder and select *Add* > *Existing Item*, find "dev.json" and click **Add**
-1. Copy all contents from "prod.json" to "dev.json"
-1. For each parameter value, append "-dev" (for example, "gab2017-app-plan" becomes "gab2017-app-plan-dev")
+1. In Solution Explorer, right click on the **ARM** folder and select *Add* > *Existing Item*, find **dev.json** and click **Add**
+1. Copy all contents from **prod.json** to **dev.json**
+1. For each parameter value, append `-dev` (for example, "gab2017-app-plan" becomes `gab2017-app-plan-dev`)
 *NOTE:* This is only to more easily differentiate these resources visually by name. The ARM template will already randomly generate unique names for each.
 1. Commit the sources to trigger the build and automatic deployment to the newly-created development environment using these commands:
 ```
@@ -454,8 +454,8 @@ Adding the Web Job to the solution involves 3 things: provisioning the deploy ta
     ```
 1. Add another task **Azure App Service Deploy** and configure the task as follows:
    * Select the subscription you linked to VSTS
-   * Enter "$(webJobServiceName)" as the **App service name** (this is a different variable captured by the second PowerShell script)
-   * Update the **Package or folder** to "$(System.DefaultWorkingDirectory)/GAB2017 CI/drop/Feedback.SentimentCalculator.zip"
+   * Enter `$(webJobServiceName)` as the **App service name** (this is a different variable captured by the second PowerShell script)
+   * Update the **Package or folder** to `$(System.DefaultWorkingDirectory)/GAB2017 CI/drop/Feedback.SentimentCalculator.zip`
    <br />*NOTE:* As with the website, there was a bit of setup I took care of for you involving adding Web Job SDK NuGet packages and adding a publish profile.
 1. Repeat the above 2 steps for the **Prod** environment, except adjust the first line of the **Inline Script** to assign resource group name `GAB2017`
 1. Save the release definition
