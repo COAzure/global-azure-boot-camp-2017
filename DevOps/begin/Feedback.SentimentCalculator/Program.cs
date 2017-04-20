@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace Feedback.SentimentCalculator
 {
-    class Program
+    public class Program
     {
         private const string BaseUrl = "https://westus.api.cognitive.microsoft.com/";
         private const string Every1Minute = "0 */1 * * * *";

@@ -7,15 +7,14 @@ This lab shows the following key concepts:
 - Creating a Delivery Pipeline in Visual Studio Team Services (VSTS)
 - Resource management with Azure Resource Manager (ARM) templates
 - Configuration management with VSTS and ARM templates for multiple environments
-- Application Lifecyle Management (ALM)
 
 An important concept in the Ops part of DevOps is operational support. Azure provides a large number of mechanisms for logging, monitoring, and tracking telemetry, but these are out of scope for this lab.
 
 **Lab Tasks**:
-1. [Setting Up VSTS](#1-Setting-Up-VSTS)
-1. [Setting Up the Delivery Pipelines](#2-Setting-Up-the-Delivery-Pipelines)
-1. [Adding a New Environment](#3-Adding-a-New-Environment)
-1. [Adding New Resources and Deployable](#4-Adding-New-Resources-and-Deployable)
+1. [Setting Up VSTS](#1-setting-up-vsts)
+1. [Setting Up the Delivery Pipelines](#2-setting-up-the-delivery-pipelines)
+1. [Adding a New Environment](#3-adding-a-new-environment)
+1. [Adding New Resources and Deployable](#4-adding-new-resources-and-deployable)
 
 ## 0. Prerequisites
 
@@ -46,22 +45,7 @@ In order to keep things organized within your account, lets create a new Team Pr
 ![Generate Git credentials button](images/generate-git-credentials.png)
 1. Enter credentials and **Save Git Credentials**
 
-### 1.b Adding Work Items
-
-At this point your Team Project is ready to use, but lets add some work items to demonstrate the ALM capabilities of VSTS and some ways that the Delivery Pipeline ties into them.
-<br />*NOTE:* There is a LOT more to the ALM capabilities than what is shown in this lab.
-
-1. Go to the **Work** section of your new Team Project via the top-level navigation bar
-![Work menu item](images/vsts-work-menu-item.png)
-1. Add the following work items:
-    1. **Create basic website**
-    1. **Add Web Job background task**
-    1. **Record feedback to database**
-<br />![Creating work items](images/add-backlog-items.png)
-
-For the purpose of this lab, don't bother putting any details into these work items other than the title.
-
-### 1.c Preparing the Source Control Repository
+### 1.b Preparing the Source Control Repository
 
 The project sources are currently in this GitHub repository. VSTS allows you to drive a Delivery Pipeline from a GitHub repository, but this would require you to fork the repository in order to have access to push updates to trigger the Continuous Integration (CI) process.
 
@@ -73,7 +57,7 @@ Instead, we will use the Git repository within the VSTS repository so will copy 
 ![Work menu item](images/vsts-code-menu-item.png)
 1. Copy the HTTPS url to the Git repository
 ![Copy repository path button](images/clone-repository.png)
-1. In your Git command prompt of choice and navigate to where you want to clone the VSTS repository
+1. In your Git command prompt of choice (such as PowerShell) and navigate to where you want to clone the VSTS repository
 1. Clone the repository with command `git clone <paste-HTTPS-url-copied-earlier>`
 <br />*NOTE:* Git will give you a warning that you've cloned an empty repository, we will ignore the warning.
 1. Move into the cloned repository folder with command `cd GAB2017`
@@ -115,7 +99,7 @@ Microsoft is currently rolling out a new build definition editor. The screenshot
 1. Select the **Build solution \*\*\\*.sln** build task
 <br />![Build solution build task](images/build-solution-build-task.png)
 1. Add the following to the MSBuild Arguments field: `/p:DeployOnBuild=true /p:PublishProfile=Release /p:WebPublishMethod=Package /p:PackageAsSingleFile=true /p:SkipInvalidConfigurations=true /p:PackageLocation=$(Build.StagingDirectory)`
-<br />*NOTE:* These arguments tell Visual Studio to package the build outputs into clean and convenient little artifacts for release to Azure. There was also a bit of magic done for you in creating the "Release" publish profile, which should be familiar to anyone who is used to ASP.NET projects and is not specific to this lab.
+<br />*NOTE:* These arguments tell Visual Studio to package the build outputs into clean and convenient little artifacts for release to Azure. There was also a bit of setup done for you in creating the "Release" publish profile, which should be familiar to anyone who is used to ASP.NET projects and is not specific to this lab.
 <br />![MSBuild arguments field](images/msbuild-arguments.png)
 1. Select the **Test Assemblies \*\*\\$(BuildConfiguration)\\\*test\*.dll;-:\*\*\\obj\\\*\*** build task
 1. Expand **Advanced Execution Options** and set the VSTest version to **Latest**
@@ -180,7 +164,8 @@ Follow [these instructions](https://blogs.msdn.microsoft.com/visualstudioalm/201
    * Change **Script Type** to **Inline Script**
    * Add the following **Inline Script** text:
     ```
-    $apps = Get-AzureRmWebApp
+    $resourceGroup = 'GAB2017'
+    $apps = Get-AzureRmWebApp -ResourceGroupName $resourceGroup
     foreach ($app in $apps)
     {
       $appName = $app.Name
@@ -219,11 +204,47 @@ By now the release should have finished successfully. You can visit the site at 
 
 ## 3. Adding a New Environment
 
-1. tbd...
+So, this is great, we have a production environment. We have a few users in our product, but we need to undertake new development efforts to add capabilities. We don't want our changes to go straight out to production and impact active users so we will create a development environment. Thanks to the ARM template, this is remarkably simple to do in Azure!
+
+### 3.a Updating the Delivery Pipeline
+
+1. Back in VSTS, edit your release definition
+1. Click the ellipses (...) on the **Prod** environment and click **Clone environment** in the context menu.
+1. Uncheck the **Trigger** option and click **Create**
+1. Drag the newly-created enviornment above **Prod**, and rename it **Dev**
+1. Click the ellipses for on the **Dev** environment and click **Configure variables**
+1. Right now the database password for dev and prod is the same, which may not be a good idea, so enter a new strong password for **Dev**
+*NOTE:* You have to "unlock" the value to change it. Be sure to lock it again to keep it secret.
+1. Select the first release task and change the **Resource group** from "GAB2017" to "GAB2017Dev" and **Template parameters** to `$(System.DefaultWorkingDirectory)/GAB2017 CI/arm/dev.json`
+1. Repeat the last step for the second release task
+1. Select the third release task and update the first line of the **Inline Script** to assign "GAB2017Dev" to the **$resourceGroup** variable
+*TIP:* The above 3 steps could have been avoided if we had used an environment variable for the resource group name. In that way, we wouldn't have to change the individual steps for each environment, instead only changing the environment variable to have a distinct value for each environment, similar to what we did above for the database password.
+1. Click the **Triggers** tab
+1. Edit the **Environment triggers** so that **Dev** is automatic and **Prod** is manual
+![Updated environment triggers](images/environment-triggers.png)
+1. Save the release definition
+
+### 3.b Source Changes
+
+1. Add file "dev.json" within the **ARM** folder on disk
+1. Go to Visual Studio with the Feedback.sln open
+*NOTE:* Solution folders in Visual Studio are completely logical. Unfortunately, if you want the file in the right place, you have to create it first then add it to Visual Studio.
+1. In Solution Explorer, right click on the **ARM** folder and select *Add* > *Existing Item*, find "dev.json" and click **Add**
+1. Copy all contents from "prod.json" to "dev.json"
+1. For each parameter value, append "-dev" (for example, "gab2017-app-plan" becomes "gab2017-app-plan-dev")
+*NOTE:* This is only to more easily differentiate these resources visually by name. The ARM template will already randomly generate unique names for each.
+1. Commit the sources to trigger the build and automatic deployment to the newly-created development environment using these commands:
+```
+git add .
+git commit -m "Added dev environment ARM parameters file"
+git push
+```
+
+It might surprise you how little effort in the code this was. No dealing with transforms. We let VSTS configuration management and the ARM parameter file handle all the [minor differences between environments](https://12factor.net/dev-prod-parity). 
 
 ## 4. Adding New Resources and Deployable
 
-It is great that we got our website online. But this isn't much of a robust system. Over the lifecycle of a project it is very common for additional resources and services to be added. In this section we will add Cognitive Text Analysis to calculate a sentiment score for each piece of feedback, a Web Job (in its own App Service, within the same App Service Plan) that does the behind-the-scenes work of updating the feedback with the sentiment score, and a storage account for use by the Web Jobs SDK.
+It is great that we got our website online. But this isn't much of a dynamic system. Over the lifecycle of a project it is very common for additional resources and services to be added. In this section we will add Cognitive Text Analysis to calculate a sentiment score for each piece of feedback, a Web Job (in its own App Service, within the same App Service Plan) that does the behind-the-scenes work of updating the feedback with the sentiment score, and a storage account for use by the Web Jobs SDK.
 
 ### 4.a Enabling Cognitive Services APIs
 
@@ -245,27 +266,221 @@ Notice we didn't actually create anything while in the portal. The best DevOps t
 
 ### 4.b Updating the ARM Template
 
-1. tbd...
-
-- List keys...
-- Not using free tier for one environment...
+1. In Visual Studio, open **ARM/template.json**
+1. Add the following JSON to the **parameters** object:
+```
+  "app_webjobs_name_prefix": {
+    "type": "string"
+  },
+  "storageaccount_name_prefix": {
+    "type": "string"
+  },
+  "storageaccount_sku": {
+    "type": "object",
+    "defaultValue": {
+      "name": "Standard_RAGRS",
+      "tier": "Standard"
+    }
+  },
+  "cognetive_services_name": {
+    "type": "string"
+  },
+  "cognetive_services_sku": {
+    "defaultValue": "S1",
+    "type": "string"
+  }
+```
+1. Add the following JSON to the **variables** object:
+```
+  "app_webjobs_name": "[concat(parameters('app_webjobs_name_prefix'),'-',uniqueString(subscription().subscriptionId,resourceGroup().id))]",
+  "storageaccount_name": "[concat(parameters('storageaccount_name_prefix'),uniqueString(subscription().subscriptionId,resourceGroup().id))]"
+```
+*NOTE:* This is what ensures unique DNS names across all participants of this lab.
+1. Add the following JSON to the **resources** array:
+```
+  {
+    "type": "Microsoft.Web/sites",
+    "kind": "WebApp",
+    "name": "[variables('app_webjobs_name')]",
+    "apiVersion": "2015-08-01",
+    "location": "[parameters('datacenter_region')]",
+    "properties": {
+      "name": "[variables('app_webjobs_name')]",
+      "hostNames": [
+        "[concat(variables('app_webjobs_name'),'.azurewebsites.net')]"
+      ],
+      "enabledHostNames": [
+        "[concat(variables('app_webjobs_name'),'.azurewebsites.net')]",
+        "[concat(variables('app_webjobs_name'),'.scm.azurewebsites.net')]"
+      ],
+      "hostNameSslStates": [
+        {
+          "name": "[concat(variables('app_webjobs_name'),variables('app_webjobs_name'),'.azurewebsites.net')]",
+          "sslState": 0,
+          "ipBasedSslState": 0
+        },
+        {
+          "name": "[concat(variables('app_webjobs_name'),variables('app_webjobs_name'),'.scm.azurewebsites.net')]",
+          "sslState": 0,
+          "ipBasedSslState": 0
+        }
+      ],
+      "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', parameters('serverfarm_app_plan_name'))]",
+      "siteConfig": {
+        "AlwaysOn": true
+      }
+    },
+    "resources": [
+      {
+        "name": "appsettings",
+        "type": "config",
+        "apiVersion": "2015-08-01",
+        "location": "[parameters('datacenter_region')]",
+        "tags": {
+          "displayName": "WebAppSettings"
+        },
+        "properties": {
+          "CognetiveServicesAccountKey": "[listKeys(resourceId('Microsoft.CognitiveServices/accounts', parameters('cognetive_services_name')), '2016-02-01-preview').key1]"
+        },
+        "dependsOn": [
+          "[concat('Microsoft.Web/sites/',variables('app_webjobs_name'))]"
+        ]
+      },
+      {
+        "name": "connectionstrings",
+        "type": "config",
+        "apiVersion": "2015-08-01",
+        "location": "[parameters('datacenter_region')]",
+        "properties": {
+          "FeedbackDatabaseConnection": {
+            "value": "[variables('database_connection_string')]",
+            "type": "SQLAzure"
+          },
+          "AzureWebJobsDashboard": {
+            "value": "[concat('DefaultEndpointsProtocol=https;AccountName=',variables('storageaccount_name'),';AccountKey=',listKeys(resourceId('Microsoft.Storage/storageAccounts',variables('storageaccount_name')),'2016-01-01').keys[0].value)]",
+            "type": "Custom"
+          },
+          "AzureWebJobsStorage": {
+            "value": "[concat('DefaultEndpointsProtocol=https;AccountName=',variables('storageaccount_name'),';AccountKey=',listKeys(resourceId('Microsoft.Storage/storageAccounts',variables('storageaccount_name')),'2016-01-01').keys[0].value)]",
+            "type": "Custom"
+          }
+        },
+        "dependsOn": [
+          "[concat('Microsoft.Web/sites/',variables('app_webjobs_name'))]"
+        ]
+      }
+    ],
+    "dependsOn": [
+      "[resourceId('Microsoft.Web/serverfarms',parameters('serverfarm_app_plan_name'))]"
+    ]
+  },
+  {
+    "type": "Microsoft.Storage/storageAccounts",
+    "sku": "[parameters('storageaccount_sku')]",
+    "kind": "Storage",
+    "name": "[variables('storageaccount_name')]",
+    "apiVersion": "2016-01-01",
+    "location": "[parameters('datacenter_region')]",
+    "tags": {},
+    "properties": {},
+    "resources": [],
+    "dependsOn": []
+  },
+  {
+    "name": "[parameters('cognetive_services_name')]",
+    "type": "Microsoft.CognitiveServices/accounts",
+    "apiVersion": "2016-02-01-preview",
+    "sku": {
+      "name": "[parameters('cognetive_services_sku')]"
+    },
+    "kind": "TextAnalytics",
+    "location": "[parameters('datacenter_region')]",
+    "tags": {},
+    "properties": {}
+  }
+```
+*NOTE:* Of particular importance here are the **appsettings** and **connectionstrings** of the new Web Job site. The values of these configurations, such as **CognetiveServicesAccountKey**, are queried out of the resources *as they are being provisioned*. Without this powerful capability of ARM we would have to provision all the resources and then separately manually configure these settings in the Azure Portal, or (much worse) in our source code.
+1. Open "prod.json" and add the following parameters JSON:
+```
+    "app_webjobs_name_prefix": {
+      "value": "gab2017-webjobs"
+    },
+    "storageaccount_name_prefix": {
+      "value": "gab2017"
+    },
+    "cognetive_services_name": {
+      "value": "gab2017-textanalytics"
+    }
+```
+1. Open "dev.json" and add the following parameters JSON:
+```
+    "app_webjobs_name_prefix": {
+      "value": "gab2017-webjobs-dev"
+    },
+    "storageaccount_name_prefix": {
+      "value": "gab2017dev"
+    },
+    "cognetive_services_name": {
+      "value": "gab2017-textanalytics-dev"
+    },
+    "cognetive_services_sku": {
+      "value": "F0"
+    }
+```
+*NOTE:* For dev, we opt for using the free-tier of Cognitive services. This shows that if you are strategic in choosing available parameter inputs, you can have a high degree of control between environments and even deployments within the same environment by varying the parameter values. These configurations are what the Web Job to be added in the next section use to gain access to the database, Azure Storage Account, and Cognitive Services.
 
 ### 4.c Adding the Web Job Project
 
-1. tbd...
+Adding the Web Job to the solution involves 3 things: provisioning the deploy target resource (will be done as a result of the previous step), configuring the Delivery Pipeline to deploy the job, and adding the Web Job to the Visual Studio solution to be included in the CI build.
 
+1. Go to VSTS and again edit the release definition
+1. Add another task **Azure PowerShell** and configure the task as follows:
+   * Change **Azure Connection Type** to **Azure Resource Manager**
+   * Select the subscription you linked to VSTS
+   * Change **Script Type** to **Inline Script**
+   * Add the following **Inline Script** text:
+    ```
+    $resourceGroup = 'GAB2017Dev'
+    $apps = Get-AzureRmWebApp -ResourceGroupName $resourceGroup
+    foreach ($app in $apps)
+    {
+      $appName = $app.Name
+      if ($appName.StartsWith('gab2017-webjobs-'))
+      {
+        Write-Host ("Found app service: $appName")
+        Write-Output ("##vso[task.setvariable variable=webJobServiceName;]$appName")
+      }
+    }
+    ```
+1. Add another task **Azure App Service Deploy** and configure the task as follows:
+   * Select the subscription you linked to VSTS
+   * Enter "$(webJobServiceName)" as the **App service name** (this is a different variable captured by the second PowerShell script)
+   * Update the **Package or folder** to "$(System.DefaultWorkingDirectory)/GAB2017 CI/drop/Feedback.SentimentCalculator.zip"
+   <br />*NOTE:* As with the website, there was a bit of setup I took care of for you involving adding Web Job SDK NuGet packages and adding a publish profile.
+1. Repeat the above 2 steps for the **Prod** environment, except adjust the first line of the **Inline Script** to assign resource group name `GAB2017`
+1. Save the release definition
+1. Go to Visual Studio
+1. Right click the Feedback solution within Solution Explorer and click *Add* > *Existing Project* from the context menu
+1. Navigate to the **Feedback.SentimentCalculator\Feedback.SentimentCalculator.csproj** project within the source repository and click **Open**
+<br />*NOTE:* The Web Job is fully implemented to process the submitted feedback using Cognitive Services.
+1. Commit the sources to trigger the build and automatic deployment to the newly-created development environment using these commands:
+```
+git add .
+git commit -m "Added web job and updated ARM template to provision new resources"
+git push
+```
 
+### 4.d Promoting to Production
 
+You can check the progress of the running build process by going to the Build section of VSTS. When the build completes a release to the Dev environment should automatically pick up. When done, your **Releases** list should look something like this:
+<br />![Released to Dev, Prod pending](images/released-to-dev.png)
 
-# JUNK DRAWER
+If you go to the deployed sites in Dev, you should notice that after submitting feedback, within a minute of refreshing the site the feedback has a sentiment score value. This behavior doesn't yet exist in Prod.
+<br />*TIP:* If you don't see this behavior, you can check KUDU's Web Job logs at https://gab2017-webjobs-{random-value}.scm.azurewebsites.net/azurejobs. You will need to log in with your Azure credentials. That *.scm* endpoint has tons of Ops tools for supporting your Azure App Service deployments.
 
+Furthermore, if you log in to the Azure Portal you'll notice the GAB2017Dev resource group has several more resources provisioned than GAB2017. Remember and be amazed that you never manually created any of these resources!
 
+Now you can promote the latest to production simply by double-clicking on the VSTS release, clicking the Deploy button, selecting the target environment, and confirming the deployment.
+<br />![Promoting to prod](images/promote-to-prod.png)
 
-
-1. Click the **Variables** tab of the release
-![Release variables tab](images/release-variables-tab.png)
-1. Switch from release variables to environment variables
-<br />*NOTE:* Release variable apply across environments. Environment variables can have distinct values configured for each environment. In this case, we will enable having a different database password in different environments. In this way, you can ensure that people with the password to one environment can't necessarily access the database of another.
-![Switching to environment variables](images/switching-from-release-to-environment-variables.png)
-1. Add variable name "dbPassword" with a value that meets the Azure database strength rules, and click the padlock to encrypt and secure the variable value
-1. Enter a 
+After that completes Dev and Prod should behave the same and the Azure Portal should show both resources groups having the same type and number of resources.

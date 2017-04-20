@@ -22,6 +22,9 @@
     },
     "cognetive_services_name": {
       "value": "gab2017-textanalytics-dev"
+    },
+    "cognetive_services_sku": {
+      "value": "F0"
     }
   }
 }
