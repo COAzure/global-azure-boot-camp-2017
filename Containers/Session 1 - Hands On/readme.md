@@ -167,9 +167,9 @@ Now that you have an SSH key pair, you can create and configure an Azure Contain
 When the deployment completes successfully, you will see all the resources that comprise the container service in the resource group. The next step is to open a secure connection to the service.
 
 <a name="Exercise3"></a>
-## Exercise 3: Record fully qualified domain names ##
+## Exercise 3: Connect to the Azure Container Service ##
 
-In this exercise, you will retrieve fully qualified domain names (FQDNs) for the master node and agent node of the container service you deployed in the previous exercise.
+In this exercise, you will retrieve fully qualified domain names (FQDNs) for the master node and agent node of the container service you deployed in the previous exercise. You will use that FQDN to connect to ACS.
 
 1. In the blade for the "OrchestrationLabResourceGroup" resource group, click the container service.
 
@@ -188,8 +188,6 @@ In this exercise, you will retrieve fully qualified domain names (FQDNs) for the
     ![Copying the agent FQDN to the clipboard](Images/copy-agent-fqdn.png)
 
 	_Copying the agent FQDN to the clipboard_
-
-You will use the **master FQDN** in the next exercise to establish an SSH tunnel to the master node. You will use the **agent FQDN** in [Exercise 5](#Exercise5) to connect to a PHP Web app running in a container in the agent node.
 
 ### Mac and Linux Users ###
 **If you are running Windows, skip to the Windows Users section**. 
@@ -336,6 +334,8 @@ There is no need to stop the agent VMs. They are part of an [Azure Virtual Machi
 ## Exercise 6: Delete the resource group
 
 Resource groups are a useful feature of Azure because they simplify the task of managing related resources. One of the most practical reasons to use resource groups is that deleting a resource group deletes all the resources it contains. Rather than delete those resources one by one, you can delete them all at once.
+
+> If you plan on doing Session 2 - Docker Orchestration and the Azure Container Service, you may want to skip this step instead of deleting and re-creating yourAzure Container Service.
 
 In this exercise, you will delete the resource group created in [Exercise 2](#Exercise2) when you created the container service. Deleting the resource group deletes everything in it and prevents any further charges from being incurred for it.
 
