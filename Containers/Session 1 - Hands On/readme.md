@@ -38,13 +38,11 @@ The following are required to complete this hands-on lab:
 
 - An active Microsoft Azure subscription. If you don't have one, [sign up for a free trial](http://aka.ms/WATK-FreeTrial).
 - [PuTTY](http://www.chiark.greenend.org.uk/~sgtatham/putty/download.html) (Windows users only)
-- Docker client (also known as the *Docker Engine CLI*) for [Windows](https://get.docker.com/builds/Windows/x86_64/docker-latest.zip), [macOS](https://get.docker.com/builds/Darwin/x86_64/docker-latest.tgz), or [Linux](https://get.docker.com/builds/Linux/x86_64/docker-latest.tgz)
-
-To install the Docker client for Windows, open https://get.docker.com/builds/Windows/x86_64/docker-latest.zip and copy the executable file named "docker.exe" from the "docker" subdirectory to a local folder. To install the Docker client for macOS, open https://get.docker.com/builds/Darwin/x86_64/docker-latest.tgz and copy the executable file named "docker" from the "docker" subdirectory to a local folder. To install the Docker client for Linux, open https://get.docker.com/builds/Linux/x86_64/docker-latest.tgz and copy the executable file named "docker" from the "docker" subdirectory to a local folder. (You can ignore the other files in the "docker" subdirectory.)
-
-> After installing the Docker client, add the directory in which it was installed to the PATH environment variable so you can execute **docker** commands on the command line without prefacing them with path names.
+- Docker client (also known as the *Docker Engine CLI*) for [Windows](https://download.docker.com/win/stable/InstallDocker.msi), [macOS](https://download.docker.com/mac/stable/Docker.dmg), or [Linux](https://get.docker.com/builds/Linux/x86_64/docker-latest.tgz)
 
 You do not need to install the Docker client if you already have Docker (or Docker Toolbox) installed on your machine.
+
+You may need to install [Docker Toolbox](https://docs.docker.com/toolbox/overview/) if you have an older Mac or Windows system. 
 
 ---
 <a name="Exercises"></a>
@@ -169,21 +167,29 @@ Now that you have an SSH key pair, you can create and configure an Azure Contain
 When the deployment completes successfully, you will see all the resources that comprise the container service in the resource group. The next step is to open a secure connection to the service.
 
 <a name="Exercise3"></a>
-## Exercise 3: Connect to the Azure Container Service
+## Exercise 3: Record fully qualified domain names ##
 
-In this exercise, you will establish an SSH connection to the container service you deployed in Exercise 2 so you can use the Docker client to create Docker containers and run them in Azure.
+In this exercise, you will retrieve fully qualified domain names (FQDNs) for the master node and agent node of the container service you deployed in the previous exercise.
 
-1. After the container service finishes deploying, return to the blade for the "ACSLabResourceGroup" resource group. Then click the resource named **containerservice-xxxxxxxx**. 
+1. In the blade for the "OrchestrationLabResourceGroup" resource group, click the container service.
 
-	![Opening the container service](Images/docker-open-master-lb.png)
+    ![Opening the container service](Images/open-container-service.png)
 
 	_Opening the container service_
 
-1. Hover over the URL address under "Master FQDN" Wait for a **Copy** button to appear, and then click it to copy the FQDN address to the clipboard.
+1. Hover the mouse pointer over the master fully qualified domain name. When a **Copy** button appears, click it to copy the domain name to the clipboard. Then **paste the name into your favorite text editor so you can retrieve it later**. This is the **master FQDN**.
 
-	![Copying the FQDN address](Images/docker-click-ip-address.png)
+    ![Copying the master FQDN to the clipboard](Images/copy-master-fqdn.png)
 
-	_Copying the FQDN address_
+	_Copying the master FQDN to the clipboard_
+
+1. Copy the fully qualified domain name of the agent node to the clipboard and save it in your favorite text editor so you can retrieve it later. This is the **agent FQDN**.
+
+    ![Copying the agent FQDN to the clipboard](Images/copy-agent-fqdn.png)
+
+	_Copying the agent FQDN to the clipboard_
+
+You will use the **master FQDN** in the next exercise to establish an SSH tunnel to the master node. You will use the **agent FQDN** in [Exercise 5](#Exercise5) to connect to a PHP Web app running in a container in the agent node.
 
 ### Mac and Linux Users ###
 **If you are running Windows, skip to the Windows Users section**. 
