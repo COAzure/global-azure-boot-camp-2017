@@ -196,7 +196,7 @@ In this exercise, you will retrieve fully qualified domain names (FQDNs) for the
 
 1. Execute the following command to SSH in to the Azure Container Service, replacing *ipaddress* with the IP address on the clipboard (and deleting the DNS name after the IP address):
 
-	<pre>ssh dockeruser@<i>ipaddress</i> -p 2200 -L 22375:127.0.0.1:2375</pre>
+	<pre>ssh -fNL 2375:localhost:2375 -p 2200 dockeruser@<i>FQDN</i> 
 
 	> The purpose of the -L switch is to forward traffic transmitted through port 22375 on the local machine (that's the port used by the **docker** command you will be using shortly) to port 2375 at the other end. Docker Swarm listens on port 2375. The -p switch instructs SSH to use port 2200 rather than the default 22. The load balancer you're connecting to listens on port 2200 and forwards the SSH messages it receives to port 22 on the master VM.
 
@@ -227,6 +227,9 @@ In this exercise, you will retrieve fully qualified domain names (FQDNs) for the
 	_Entering the private key_
 
 1. Select **Tunnels** in the treeview. Then set **Source port** to **22375** and **Destination** to **127.0.0.1:2375**, and click the **Add** button.
+ **Select SSH > Tunnels and configure the following forwarded ports:**
+**Source Port: Use 80 for DC/OS or 2375 for Swarm.**
+**Destination: Use localhost:80 for DC/OS or localhost:2375 for Swarm.**
 
 	> The purpose of this is to forward traffic transmitted through port 22375 on the local machine (that's the port used by the **docker** command you will be using shortly) to port 2375 at the other end. Docker Swarm listens on port 2375.
 	
@@ -279,7 +282,7 @@ To create a new container in the Docker Swarm, use the `docker run` command (ens
 
 	<pre>docker run -d -p 80:80 yeasy/simple-web --name acslab</pre>
 
-1. The container is now running. You can use thge FQDN to pullup Simple Web
+1. The container is now running. You can use the FQDN to pullup Simple Web
 
 
 	![Simple Web running in our container](Images/real-visit.png)
