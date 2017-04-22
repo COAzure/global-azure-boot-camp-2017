@@ -37,7 +37,7 @@ In this hands-on lab, you will learn how to:
 The following are required to complete this hands-on lab:
 
 - An active Microsoft Azure subscription. If you don't have one, [sign up for a free trial](http://aka.ms/WATK-FreeTrial).
-- [PuTTY](http://www.chiark.greenend.org.uk/~sgtatham/putty/download.html) (Windows users only)
+- [PuTTY](http://www.chiark.greenend.org.uk/~sgtatham/putty/download.html) (Windows users only. Optionally, you can use Git Shell and follow the Mac / Linux instructions.)
 - Docker client (also known as the *Docker Engine CLI*) for [Windows](https://download.docker.com/win/stable/InstallDocker.msi), [macOS](https://download.docker.com/mac/stable/Docker.dmg), or [Linux](https://get.docker.com/builds/Linux/x86_64/docker-latest.tgz)
 
 You do not need to install the Docker client if you already have Docker (or Docker Toolbox) installed on your machine.
@@ -64,7 +64,7 @@ Estimated time to complete this lab: **60** minutes.
 
 Before you can deploy Docker images to Azure, you must create an Azure Container Service. And in order to create an Azure Container Service, you need a public/private key pair for authenticating with that service over SSH. In this exercise, you will create an SSH key pair. If you are using macOS or Linux, you will create the key pair with ssh-keygen. If you are running Windows instead, you will use a third-party tool named PuTTYGen.
 
-> Unlike macOS and Linux, Windows doesn't have an SSH key generator built in. PuTTYGen is a free key generator that is popular in the Windows community. It is part of an open-source toolset called [PuTTY](http://www.putty.org/), which provides the SSH support that Windows lacks.
+> Unlike macOS and Linux, Windows doesn't have an SSH key generator built in. PuTTYGen is a free key generator that is popular in the Windows community. It is part of an open-source toolset called [PuTTY](http://www.putty.org/), which provides the SSH support that Windows lacks. Git Shell also provides SSH functionality and is a simpler, lighter tool. If you use Git Shell, follow the Mac and Linux instructions
 
 ### Mac and Linux Users ###
 **If you are running Windows, skip to the Windows Users section**.
@@ -196,7 +196,7 @@ In this exercise, you will retrieve fully qualified domain names (FQDNs) for the
 
 1. Execute the following command to SSH in to the Azure Container Service, replacing *ipaddress* with the IP address on the clipboard (and deleting the DNS name after the IP address):
 
-	<pre>ssh -fNL 2375:localhost:2375 -p 2200 dockeruser@<i>FQDN</i> 
+	<pre>ssh -fNL 2375:localhost:2375 -p 2200 dockeruser@<i>FQDN-from-your-ACS</i> 
 
 	> The purpose of the -L switch is to forward traffic transmitted through port 2375 on the local machine (that's the port used by the **docker** command you will be using shortly) to port 2375 at the other end. Docker Swarm listens on port 2375. The -p switch instructs SSH to use port 2200 rather than the default 22. The load balancer you're connecting to listens on port 2200 and forwards the SSH messages it receives to port 22 on the master VM.
 
