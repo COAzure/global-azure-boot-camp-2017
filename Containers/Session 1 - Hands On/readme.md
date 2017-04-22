@@ -251,13 +251,11 @@ In this exercise, you will retrieve fully qualified domain names (FQDNs) for the
 Now that you're connected, you can run the Docker client on your local machine and use port forwarding to execute commands in the Azure Container Service. Leave the SSH window open while you work through the next exercise.
 
 <a name="Exercise4"></a>
-## Exercise 4: Create a Docker image and run it in a container
+## Exercise 4: Deploy a Docker container to Azure Container Service 
 
-Now comes the fun part: creating a Docker image and running it inside a container in Azure. If you haven't already installed the Docker client, refer to the instructions at the beginning of this lab to download and install the Docker client for your operating system. 
+To create a new container in the Docker Swarm, use the `docker run` command (ensuring that you have opened an SSH tunnel to the masters as per the prerequisites above). This example creates a container from the yeasy/simple-web image.
 
-1. Open a terminal window (macOS or Linux) or a Command Prompt window (Windows) and navigate to the "resources" subdirectory of this lab. It contains the files that you will build into a container image.
-
-	Take a moment to examine the contents of the "resources" subdirectory. It contains a file named **Dockerfile**, which contains the commands Docker will use to build a container image. It also contains a Python script named **convertimages.py**, a subdirectory named "input," and a subdirectory named "output." The latter subdirectory is empty. The "input" subdirectory contains several color JPG images. The Python script enumerates the files in the "input" subdirectory, converts them to grayscale, and writes the grayscale images to the "output" subdirectory.
+1. Open a terminal window (macOS or Linux) or a Command Prompt window (Windows).
 
 1. If you are running macOS or Linux, execute the following command in the terminal window:
 
@@ -269,27 +267,36 @@ Now comes the fun part: creating a Docker image and running it inside a containe
 
 	> This command directs the Docker client to send output to localhost port 22375, which you redirected to port 2375 in the Azure Container Service in the previous exercise. Remember that port 2375 is the one Docker Swarm listens on. The commands that you execute in the next few steps are typed into a local terminal window, but they are **executed in the container service you deployed to the cloud** using the SSH tunnel that you established in the previous exercise.
 
-1. Be sure you're in the "resources" subdirectory. Then execute the following command to create a container image named "ubuntu-convert" containing the Python script as well as the "input" and "output" subdirectories and their contents. Be sure to include the period at the end of the command:
+1. Run the following command to pull the _yeasy/simple-web_ container:
 
-	<pre>docker build --no-cache --tag ubuntu-convert .</pre>
+	<pre>docker pull yeasy/simple-web</pre>
 
-1. Wait for the command to finish executing. (It will take a few minutes for Docker to build the container image.) Then execute the following command to list the images that are present, and confirm that the list contains an image named "ubuntu-convert:"
+1. Wait for the command to finish executing. (It will take a few minutes for Docker to pull the container image.) Then execute the following command to list the images that are present, and confirm that the list contains an image named "yeasy/simple-web:"
 
 	<pre>docker images</pre>
 
 1. Now execute the following command to start the container image running and name the container "acslab:"
 
-	<pre>docker run -dit --name acslab ubuntu-convert /bin/bash</pre>
+	<pre>docker run -d -p 80:80 yeasy/simple-web --name acslab</pre>
 
-1. The container is now running. The next task is to execute the Python script in the root of the file system in the running container. To do that, execute the following command:
+1. The container is now running. You can use thge FQDN to pullup Simple Web
 
-	<pre>docker exec -it acslab python /convertimages.py</pre>
 
-1. If the Python script ran successfully, the "output" subdirectory in the container should contain grayscale versions of the JPG files in the "input" subdirectory. Use the following command to copy the files from the "output" subdirectory in the container to the "output" subdirectory on the local machine:
+	![Simple Web running in our container](Images/real-visit.png)
+	
 
-	<pre>docker cp acslab:/output .</pre>
+1. You can use `docker ps` to return information about the container. Notice the name of the Swarm agent running your container.
 
-	> Because you are still in the lab's "resources" subdirectory, this command will copy the grayscale images to the "resources" subdirectory's "output" subdirectory.
+	<pre>docker ps</pre>
+
+1. As multiple containers are started, by executing 'docker run' multiple times, you can use the docker ps command to see which hosts the containers are running on. 
+
+	<pre>docker run -d -p 80:80 yeasy/simple-web --name acslab</pre>
+	<pre>docker ps</pre>
+
+1. See what happens if you try to provision containers in your Swarm.
+	<pre>docker run -d -p 80:80 yeasy/simple-web --name acslab</pre>
+	<pre>docker run -d -p 80:80 yeasy/simple-web --name acslab</pre>
 
 1. Stop the running container by executing the following command:
 
@@ -298,14 +305,6 @@ Now comes the fun part: creating a Docker image and running it inside a containe
 1. Type the following command to delete the "acslab" container:
 
 	<pre>docker rm acslab</pre>
-
-1. List the contents of the "output" subdirectory under the "resources" subdirectory that you are currently in. Confirm that it contains eight JPG files copied from the container.
-
-1. Open one of the JPG files and confirm that it contains a grayscale image like the one pictured below.
-
-	![Grayscale image copied from the container](Images/docker-output.jpg)
-	
-	 _Grayscale image copied from the container_
 
 Congratulations! You just created a Docker container image and ran it in a Docker container hosted in Azure. You can close the SSH window now because you are finished using the SSH connection.
 
@@ -335,7 +334,7 @@ There is no need to stop the agent VMs. They are part of an [Azure Virtual Machi
 
 Resource groups are a useful feature of Azure because they simplify the task of managing related resources. One of the most practical reasons to use resource groups is that deleting a resource group deletes all the resources it contains. Rather than delete those resources one by one, you can delete them all at once.
 
-> If you plan on doing Session 2 - Docker Orchestration and the Azure Container Service, you may want to skip this step instead of deleting and re-creating yourAzure Container Service.
+> If you plan on doing **Session 2 - Docker Orchestration and the Azure Container Service**, you may want to skip this step instead of deleting and re-creating yourAzure Container Service.
 
 In this exercise, you will delete the resource group created in [Exercise 2](#Exercise2) when you created the container service. Deleting the resource group deletes everything in it and prevents any further charges from being incurred for it.
 
