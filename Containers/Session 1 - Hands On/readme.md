@@ -198,7 +198,7 @@ In this exercise, you will retrieve fully qualified domain names (FQDNs) for the
 
 	<pre>ssh -fNL 2375:localhost:2375 -p 2200 dockeruser@<i>FQDN</i> 
 
-	> The purpose of the -L switch is to forward traffic transmitted through port 22375 on the local machine (that's the port used by the **docker** command you will be using shortly) to port 2375 at the other end. Docker Swarm listens on port 2375. The -p switch instructs SSH to use port 2200 rather than the default 22. The load balancer you're connecting to listens on port 2200 and forwards the SSH messages it receives to port 22 on the master VM.
+	> The purpose of the -L switch is to forward traffic transmitted through port 2375 on the local machine (that's the port used by the **docker** command you will be using shortly) to port 2375 at the other end. Docker Swarm listens on port 2375. The -p switch instructs SSH to use port 2200 rather than the default 22. The load balancer you're connecting to listens on port 2200 and forwards the SSH messages it receives to port 22 on the master VM.
 
 1. If asked to confirm that you wish to connect, answer yes. Once connected, you'll see a screen that resembles the one below.
 
@@ -228,7 +228,7 @@ In this exercise, you will retrieve fully qualified domain names (FQDNs) for the
 
 1. Select **Tunnels** in the treeview. Then set **Source port** to **2375** and **Destination** to **127.0.0.1:2375**, and click the **Add** button.
 
-	> The purpose of this is to forward traffic transmitted through port 22375 on the local machine (that's the port used by the **docker** command you will be using shortly) to port 2375 at the other end. Docker Swarm listens on port 2375.
+	> The purpose of this is to forward traffic transmitted through port 2375 on the local machine (that's the port used by the **docker** command you will be using shortly) to port 2375 at the other end. Docker Swarm listens on port 2375.
 	
 	![Configuring the SSH tunnel](Images/docker-putty3.png)
 
@@ -259,11 +259,11 @@ To create a new container in the Docker Swarm, use the `docker run` command (ens
 
 1. If you are running macOS or Linux, execute the following command in the terminal window:
 
-	<pre>export DOCKER_HOST=tcp://127.0.0.1:22375</pre>
+	<pre>export DOCKER_HOST=:2375</pre>
 
 	If you are running Windows instead, execute this command in the Command Prompt window:
 
-	<pre>set DOCKER_HOST=tcp://127.0.0.1:22375</pre>
+	<pre>set DOCKER_HOST=:2375</pre>
 
 	> This command directs the Docker client to send output to localhost port 22375, which you redirected to port 2375 in the Azure Container Service in the previous exercise. Remember that port 2375 is the one Docker Swarm listens on. The commands that you execute in the next few steps are typed into a local terminal window, but they are **executed in the container service you deployed to the cloud** using the SSH tunnel that you established in the previous exercise.
 
