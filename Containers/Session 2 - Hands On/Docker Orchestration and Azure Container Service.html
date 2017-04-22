@@ -1,0 +1,968 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Docker Orchestration and Azure Container Service</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<style type="text/css">
+/* GitHub stylesheet for MarkdownPad (http://markdownpad.com) */
+/* Author: Nicolas Hery - http://nicolashery.com */
+/* Version: b13fe65ca28d2e568c6ed5d7f06581183df8f2ff */
+/* Source: https://github.com/nicolahery/markdownpad-github */
+
+/* RESET
+=============================================================================*/
+
+html, body, div, span, applet, object, iframe, h1, h2, h3, h4, h5, h6, p, blockquote, pre, a, abbr, acronym, address, big, cite, code, del, dfn, em, img, ins, kbd, q, s, samp, small, strike, strong, sub, sup, tt, var, b, u, i, center, dl, dt, dd, ol, ul, li, fieldset, form, label, legend, table, caption, tbody, tfoot, thead, tr, th, td, article, aside, canvas, details, embed, figure, figcaption, footer, header, hgroup, menu, nav, output, ruby, section, summary, time, mark, audio, video {
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+/* BODY
+=============================================================================*/
+
+body {
+  font-family: Helvetica, arial, freesans, clean, sans-serif;
+  font-size: 14px;
+  line-height: 1.6;
+  color: #333;
+  background-color: #fff;
+  padding: 20px;
+  max-width: 960px;
+  margin: 0 auto;
+}
+
+body>*:first-child {
+  margin-top: 0 !important;
+}
+
+body>*:last-child {
+  margin-bottom: 0 !important;
+}
+
+/* BLOCKS
+=============================================================================*/
+
+p, blockquote, ul, ol, dl, table, pre {
+  margin: 15px 0;
+}
+
+/* HEADERS
+=============================================================================*/
+
+h1, h2, h3, h4, h5, h6 {
+  margin: 20px 0 10px;
+  padding: 0;
+  font-weight: bold;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1 tt, h1 code, h2 tt, h2 code, h3 tt, h3 code, h4 tt, h4 code, h5 tt, h5 code, h6 tt, h6 code {
+  font-size: inherit;
+}
+
+h1 {
+  font-size: 28px;
+  color: #000;
+}
+
+h2 {
+  font-size: 24px;
+  border-bottom: 1px solid #ccc;
+  color: #000;
+}
+
+h3 {
+  font-size: 18px;
+}
+
+h4 {
+  font-size: 16px;
+}
+
+h5 {
+  font-size: 14px;
+}
+
+h6 {
+  color: #777;
+  font-size: 14px;
+}
+
+body>h2:first-child, body>h1:first-child, body>h1:first-child+h2, body>h3:first-child, body>h4:first-child, body>h5:first-child, body>h6:first-child {
+  margin-top: 0;
+  padding-top: 0;
+}
+
+a:first-child h1, a:first-child h2, a:first-child h3, a:first-child h4, a:first-child h5, a:first-child h6 {
+  margin-top: 0;
+  padding-top: 0;
+}
+
+h1+p, h2+p, h3+p, h4+p, h5+p, h6+p {
+  margin-top: 10px;
+}
+
+/* LINKS
+=============================================================================*/
+
+a {
+  color: #4183C4;
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+/* LISTS
+=============================================================================*/
+
+ul, ol {
+  padding-left: 30px;
+}
+
+ul li > :first-child, 
+ol li > :first-child, 
+ul li ul:first-of-type, 
+ol li ol:first-of-type, 
+ul li ol:first-of-type, 
+ol li ul:first-of-type {
+  margin-top: 0px;
+}
+
+ul ul, ul ol, ol ol, ol ul {
+  margin-bottom: 0;
+}
+
+dl {
+  padding: 0;
+}
+
+dl dt {
+  font-size: 14px;
+  font-weight: bold;
+  font-style: italic;
+  padding: 0;
+  margin: 15px 0 5px;
+}
+
+dl dt:first-child {
+  padding: 0;
+}
+
+dl dt>:first-child {
+  margin-top: 0px;
+}
+
+dl dt>:last-child {
+  margin-bottom: 0px;
+}
+
+dl dd {
+  margin: 0 0 15px;
+  padding: 0 15px;
+}
+
+dl dd>:first-child {
+  margin-top: 0px;
+}
+
+dl dd>:last-child {
+  margin-bottom: 0px;
+}
+
+/* CODE
+=============================================================================*/
+
+pre, code, tt {
+  font-size: 12px;
+  font-family: Consolas, "Liberation Mono", Courier, monospace;
+}
+
+code, tt {
+  margin: 0 0px;
+  padding: 0px 0px;
+  white-space: nowrap;
+  border: 1px solid #eaeaea;
+  background-color: #f8f8f8;
+  border-radius: 3px;
+}
+
+pre>code {
+  margin: 0;
+  padding: 0;
+  white-space: pre;
+  border: none;
+  background: transparent;
+}
+
+pre {
+  background-color: #f8f8f8;
+  border: 1px solid #ccc;
+  font-size: 13px;
+  line-height: 19px;
+  overflow: auto;
+  padding: 6px 10px;
+  border-radius: 3px;
+}
+
+pre code, pre tt {
+  background-color: transparent;
+  border: none;
+}
+
+kbd {
+    -moz-border-bottom-colors: none;
+    -moz-border-left-colors: none;
+    -moz-border-right-colors: none;
+    -moz-border-top-colors: none;
+    background-color: #DDDDDD;
+    background-image: linear-gradient(#F1F1F1, #DDDDDD);
+    background-repeat: repeat-x;
+    border-color: #DDDDDD #CCCCCC #CCCCCC #DDDDDD;
+    border-image: none;
+    border-radius: 2px 2px 2px 2px;
+    border-style: solid;
+    border-width: 1px;
+    font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
+    line-height: 10px;
+    padding: 1px 4px;
+}
+
+/* QUOTES
+=============================================================================*/
+
+blockquote {
+  border-left: 4px solid #DDD;
+  padding: 0 15px;
+  color: #777;
+}
+
+blockquote>:first-child {
+  margin-top: 0px;
+}
+
+blockquote>:last-child {
+  margin-bottom: 0px;
+}
+
+/* HORIZONTAL RULES
+=============================================================================*/
+
+hr {
+  clear: both;
+  margin: 15px 0;
+  height: 0px;
+  overflow: hidden;
+  border: none;
+  background: transparent;
+  border-bottom: 4px solid #ddd;
+  padding: 0;
+}
+
+/* TABLES
+=============================================================================*/
+
+table th {
+  font-weight: bold;
+}
+
+table th, table td {
+  border: 1px solid #ccc;
+  padding: 6px 13px;
+}
+
+table tr {
+  border-top: 1px solid #ccc;
+  background-color: #fff;
+}
+
+table tr:nth-child(2n) {
+  background-color: #f8f8f8;
+}
+
+/* IMAGES
+=============================================================================*/
+
+img {
+  max-width: 100%
+}
+</style>
+<style type="text/css">
+.highlight  { background: #ffffff; }
+.highlight .c { color: #999988; font-style: italic } /* Comment */
+.highlight .err { color: #a61717; background-color: #e3d2d2 } /* Error */
+.highlight .k { font-weight: bold } /* Keyword */
+.highlight .o { font-weight: bold } /* Operator */
+.highlight .cm { color: #999988; font-style: italic } /* Comment.Multiline */
+.highlight .cp { color: #999999; font-weight: bold } /* Comment.Preproc */
+.highlight .c1 { color: #999988; font-style: italic } /* Comment.Single */
+.highlight .cs { color: #999999; font-weight: bold; font-style: italic } /* Comment.Special */
+.highlight .gd { color: #000000; background-color: #ffdddd } /* Generic.Deleted */
+.highlight .gd .x { color: #000000; background-color: #ffaaaa } /* Generic.Deleted.Specific */
+.highlight .ge { font-style: italic } /* Generic.Emph */
+.highlight .gr { color: #aa0000 } /* Generic.Error */
+.highlight .gh { color: #999999 } /* Generic.Heading */
+.highlight .gi { color: #000000; background-color: #ddffdd } /* Generic.Inserted */
+.highlight .gi .x { color: #000000; background-color: #aaffaa } /* Generic.Inserted.Specific */
+.highlight .go { color: #888888 } /* Generic.Output */
+.highlight .gp { color: #555555 } /* Generic.Prompt */
+.highlight .gs { font-weight: bold } /* Generic.Strong */
+.highlight .gu { color: #aaaaaa } /* Generic.Subheading */
+.highlight .gt { color: #aa0000 } /* Generic.Traceback */
+.highlight .kc { font-weight: bold } /* Keyword.Constant */
+.highlight .kd { font-weight: bold } /* Keyword.Declaration */
+.highlight .kp { font-weight: bold } /* Keyword.Pseudo */
+.highlight .kr { font-weight: bold } /* Keyword.Reserved */
+.highlight .kt { color: #445588; font-weight: bold } /* Keyword.Type */
+.highlight .m { color: #009999 } /* Literal.Number */
+.highlight .s { color: #d14 } /* Literal.String */
+.highlight .na { color: #008080 } /* Name.Attribute */
+.highlight .nb { color: #0086B3 } /* Name.Builtin */
+.highlight .nc { color: #445588; font-weight: bold } /* Name.Class */
+.highlight .no { color: #008080 } /* Name.Constant */
+.highlight .ni { color: #800080 } /* Name.Entity */
+.highlight .ne { color: #990000; font-weight: bold } /* Name.Exception */
+.highlight .nf { color: #990000; font-weight: bold } /* Name.Function */
+.highlight .nn { color: #555555 } /* Name.Namespace */
+.highlight .nt { color: #000080 } /* Name.Tag */
+.highlight .nv { color: #008080 } /* Name.Variable */
+.highlight .ow { font-weight: bold } /* Operator.Word */
+.highlight .w { color: #bbbbbb } /* Text.Whitespace */
+.highlight .mf { color: #009999 } /* Literal.Number.Float */
+.highlight .mh { color: #009999 } /* Literal.Number.Hex */
+.highlight .mi { color: #009999 } /* Literal.Number.Integer */
+.highlight .mo { color: #009999 } /* Literal.Number.Oct */
+.highlight .sb { color: #d14 } /* Literal.String.Backtick */
+.highlight .sc { color: #d14 } /* Literal.String.Char */
+.highlight .sd { color: #d14 } /* Literal.String.Doc */
+.highlight .s2 { color: #d14 } /* Literal.String.Double */
+.highlight .se { color: #d14 } /* Literal.String.Escape */
+.highlight .sh { color: #d14 } /* Literal.String.Heredoc */
+.highlight .si { color: #d14 } /* Literal.String.Interpol */
+.highlight .sx { color: #d14 } /* Literal.String.Other */
+.highlight .sr { color: #009926 } /* Literal.String.Regex */
+.highlight .s1 { color: #d14 } /* Literal.String.Single */
+.highlight .ss { color: #990073 } /* Literal.String.Symbol */
+.highlight .bp { color: #999999 } /* Name.Builtin.Pseudo */
+.highlight .vc { color: #008080 } /* Name.Variable.Class */
+.highlight .vg { color: #008080 } /* Name.Variable.Global */
+.highlight .vi { color: #008080 } /* Name.Variable.Instance */
+.highlight .il { color: #009999 } /* Literal.Number.Integer.Long */
+.pl-c {
+    color: #969896;
+}
+
+.pl-c1,.pl-mdh,.pl-mm,.pl-mp,.pl-mr,.pl-s1 .pl-v,.pl-s3,.pl-sc,.pl-sv {
+    color: #0086b3;
+}
+
+.pl-e,.pl-en {
+    color: #795da3;
+}
+
+.pl-s1 .pl-s2,.pl-smi,.pl-smp,.pl-stj,.pl-vo,.pl-vpf {
+    color: #333;
+}
+
+.pl-ent {
+    color: #63a35c;
+}
+
+.pl-k,.pl-s,.pl-st {
+    color: #a71d5d;
+}
+
+.pl-pds,.pl-s1,.pl-s1 .pl-pse .pl-s2,.pl-sr,.pl-sr .pl-cce,.pl-sr .pl-sra,.pl-sr .pl-sre,.pl-src,.pl-v {
+    color: #df5000;
+}
+
+.pl-id {
+    color: #b52a1d;
+}
+
+.pl-ii {
+    background-color: #b52a1d;
+    color: #f8f8f8;
+}
+
+.pl-sr .pl-cce {
+    color: #63a35c;
+    font-weight: bold;
+}
+
+.pl-ml {
+    color: #693a17;
+}
+
+.pl-mh,.pl-mh .pl-en,.pl-ms {
+    color: #1d3e81;
+    font-weight: bold;
+}
+
+.pl-mq {
+    color: #008080;
+}
+
+.pl-mi {
+    color: #333;
+    font-style: italic;
+}
+
+.pl-mb {
+    color: #333;
+    font-weight: bold;
+}
+
+.pl-md,.pl-mdhf {
+    background-color: #ffecec;
+    color: #bd2c00;
+}
+
+.pl-mdht,.pl-mi1 {
+    background-color: #eaffea;
+    color: #55a532;
+}
+
+.pl-mdr {
+    color: #795da3;
+    font-weight: bold;
+}
+
+.pl-mo {
+    color: #1d3e81;
+}
+.task-list {
+padding-left:10px;
+margin-bottom:0;
+}
+
+.task-list li {
+    margin-left: 20px;
+}
+
+.task-list-item {
+list-style-type:none;
+padding-left:10px;
+}
+
+.task-list-item label {
+font-weight:400;
+}
+
+.task-list-item.enabled label {
+cursor:pointer;
+}
+
+.task-list-item+.task-list-item {
+margin-top:3px;
+}
+
+.task-list-item-checkbox {
+display:inline-block;
+margin-left:-20px;
+margin-right:3px;
+vertical-align:1px;
+}
+</style>
+</head>
+<body>
+<p><a name="HOLTitle"></a></p>
+<h1>Docker Orchestration and the Azure Container Service</h1>
+<p><a name="Overview"></a></p>
+<h2>Overview</h2>
+<p>Since its inception, Docker has been has been delivering solutions to support and enable DevOps. <a href="https://en.wikipedia.org/wiki/DevOps">DevOps</a> is a set of tools and practices for automating software development processes. Docker earned lots of attention due to how quickly and easily and software could be deployed and scaled with it, and it has since revolutionized the way that many organizations develop and deliver software.</p>
+<p>Docker's primary contribution to DevOps is <a href="https://www.docker.com/what-container">containers</a>. Containers allow apps and all of their dependencies, including run-times, libraries, and file systems, to be wrapped up in a single package. Containers provide isolation and abstraction much like virtual machines (VMs) do, but since they don't virtualize hardware, containers tend to be much smaller and start much faster. In addition, they place less demand on system resources such as RAM since an entire operating-system image doesn't have to be loaded into each container.</p>
+<p>The process of getting containers into production and managing them while they are there is called <a href="https://www.docker.com/cp/container-orchestration-engines">orchestration</a>. Containers are designed to be deployed en masse with the possibility of thousands of container instances running on a single machine or cluster of machines. Several container-orchestration tools are available in the open-source community, including <a href="https://docs.docker.com/engine/swarm/">Docker Swarm</a>, <a href="https://dcos.io/">Apache DC/OS</a>, and <a href="https://kubernetes.io/">Google Kubernetes</a>. Orchestration tools such as these typically deploy containers to a cluster of physical or virtual machines. One or more of these machines acts as a <em>master node</em> that controls the orchestration by deploying containers to agent nodes. The other nodes in the cluster are <em>agent nodes</em>, which host the containers themselves.</p>
+<p><a href="Images/orchestration.png" target="_blank"><img src="Images/orchestration.png" alt="A container cluster" style="max-width:100%;"></a></p>
+<p>Microsoft's <a href="https://azure.microsoft.com/en-us/services/container-service/">Azure Container Service (ACS)</a> provides preconfigured, production-ready clusters using DC/OS, Kubernetes, or Swarm for orchestration. ACS is a first class citizen on Azure, meaning that it can be deployed and managed through a number of different channels including the Azure CLI, Azure APIs and the Azure Portal. Agent clusters are built on <a href="https://docs.microsoft.com/en-us/azure/virtual-machine-scale-sets/virtual-machine-scale-sets-overview">VM Scale Sets</a> so they can be scaled up or down as needed without having to rebuild the cluster.</p>
+<p>In this lab, you will deploy three separate container services using the Azure Container Service and designate a different orchestrator for each. Then you will run one or more container instances in each container service using a container image you pushed to Docker Hub. Along the way, you will get first-hand experience dealing with Swarm, DC/OS, and Kubernetes, and see what's involved in using them with Azure.</p>
+<p><a name="Objectives"></a></p>
+<h3>Objectives</h3>
+<p>In this hands-on lab, you will learn how to:</p>
+<ul>
+<li>Create an Azure Container Service</li>
+<li>Tunnel in to an Azure Container Service using SSH</li>
+<li>Create Docker images and push them to Docker Hub</li>
+<li>Orchestrate container deployments using Swarm, DC/OS, and Kubernetes</li>
+<li>Run Docker containers in Azure</li>
+</ul>
+<p><a name="Prerequisites"></a></p>
+<h3>Prerequisites</h3>
+<p>The following are required to complete this hands-on lab:</p>
+<ul>
+<li>An active Microsoft Azure subscription. If you don't have one, <a href="http://aka.ms/WATK-FreeTrial">sign up for a free trial</a>.</li>
+<li>A <a href="https://hub.docker.com/">Docker Hub account</a></li>
+<li><a href="http://www.chiark.greenend.org.uk/%7Esgtatham/putty/download.html">PuTTY</a> (Windows users only)</li>
+<li>Docker client (also known as the <em>Docker Engine CLI</em>) for <a href="https://get.docker.com/builds/Windows/x86_64/docker-latest.zip">Windows</a>, <a href="https://get.docker.com/builds/Darwin/x86_64/docker-latest.tgz">macOS</a>, or <a href="https://get.docker.com/builds/Linux/x86_64/docker-latest.tgz">Linux</a></li>
+</ul>
+<p>To install the Docker client for Windows, open <a href="https://get.docker.com/builds/Windows/x86_64/docker-latest.zip">https://get.docker.com/builds/Windows/x86_64/docker-latest.zip</a> and copy the executable file named "docker.exe" from the "docker" subdirectory to a local folder. To install the Docker client for macOS, open <a href="https://get.docker.com/builds/Darwin/x86_64/docker-latest.tgz">https://get.docker.com/builds/Darwin/x86_64/docker-latest.tgz</a> and copy the executable file named "docker" from the "docker" subdirectory to a local folder. To install the Docker client for Linux, open <a href="https://get.docker.com/builds/Linux/x86_64/docker-latest.tgz">https://get.docker.com/builds/Linux/x86_64/docker-latest.tgz</a> and copy the executable file named "docker" from the "docker" subdirectory to a local folder. (You can ignore the other files in the "docker" subdirectory.)</p>
+<blockquote>
+<p>After installing the Docker client, add the directory in which it was installed to the PATH environment variable so you can execute <strong>docker</strong> commands on the command line without prefacing them with path names.</p>
+</blockquote>
+<p>You do not need to install the Docker client if you already have Docker (or Docker Toolbox) installed on your machine.</p>
+<p><a name="Exercises"></a></p>
+<h2>Exercises</h2>
+<p>This hands-on lab includes the following exercises:</p>
+<ul>
+<li><a href="#Exercise1">Exercise 1: Create an SSH key pair</a></li>
+<li><a href="#Exercise2">Exercise 2: Create a container service</a></li>
+<li><a href="#Exercise3">Exercise 3: Record fully qualified domain names</a></li>
+<li><a href="#Exercise4">Exercise 4: Connect to the master node</a></li>
+<li><a href="#Exercise5">Exercise 5: Create a Docker image, push it to Docker Hub, and run it in a container</a></li>
+<li><a href="#Exercise6">Exercise 6: Delete the resource group</a></li>
+<li><a href="#Exercise7">Exercise 7: Orchestrate with DC/OS</a></li>
+<li><a href="#Exercise8">Exercise 8: Orchestrate with Kubernetes</a></li>
+</ul>
+<p>Estimated time to complete this lab: <strong>75</strong> minutes.</p>
+<p><a name="Exercise1"></a></p>
+<h2>Exercise 1: Create an SSH key pair</h2>
+<p>Before you can deploy Docker images to Azure, you must create an Azure Container Service. And in order to create an Azure Container Service, you need a public/private key pair for authenticating with that service over SSH. In this exercise, you will create an SSH key pair. If you are using macOS or Linux, you will create the key pair with ssh-keygen. If you are running Windows instead, you will use a third-party tool named PuTTYGen.</p>
+<blockquote>
+<p>Unlike macOS and Linux, Windows doesn't have an SSH key generator built in. PuTTYGen is a free key generator that is popular in the Windows community. It is part of an open-source toolset called <a href="http://www.putty.org/">PuTTY</a>, which provides the SSH support that Windows lacks.</p>
+</blockquote>
+<ol>
+<li>
+<p><strong>If you are running Windows, skip to Step 6</strong>. Otherwise, proceed to Step 2.</p>
+</li>
+<li>
+<p>On your Mac or Linux machine, launch a terminal window.</p>
+</li>
+<li>
+<p>Execute the following command in the terminal window:</p>
+ <pre>ssh-keygen</pre>
+<p>Press <strong>Enter</strong> three times to accept the default output file name and create a key pair without a passphrase. The output will look something like this:</p>
+<p><a href="Images/docker-ssh-keygen.png" target="_blank"><img src="Images/docker-ssh-keygen.png" alt="Generating a public/private key pair" style="max-width:100%;"></a></p>
+<p><em>Generating a public/private key pair</em></p>
+</li>
+<li>
+<p>Use the following commands to navigate to the hidden ".ssh" subdirectory created by ssh-keygen and list the contents of that subdirectory:</p>
+<pre><code>cd ~/.ssh
+ls
+</code></pre>
+<p>Confirm that the ".ssh" subdirectory contains a pair of files named <strong>id_rsa</strong> and <strong>id_rsa.pub</strong>. The former contains the private key, and the latter contains the public key.</p>
+</li>
+<li>
+<p>Leave the terminal window open and <strong>proceed to <a href="#Exercise2">Exercise 2</a>. The remaining steps in this exercise are for Windows users only</strong>.</p>
+</li>
+<li>
+<p>Launch PuTTYGen and click the <strong>Generate</strong> button. For the next few seconds, move your cursor around in the empty space in the "Key" box to help randomize the keys that are generated.</p>
+<p><a href="Images/docker-puttygen1.png" target="_blank"><img src="Images/docker-puttygen1.png" alt="Generating a public/private key pair" style="max-width:100%;"></a></p>
+<p><em>Generating a public/private key pair</em></p>
+</li>
+<li>
+<p>Once the keys are generated, click <strong>Save public key</strong> and save the public key to a text file named <strong>public.txt</strong>. Then click <strong>Save private key</strong> and save the private key to a file named <strong>private.ppk</strong>. When prompted to confirm that you want to save the private key without a passphrase, click <strong>Yes</strong>.</p>
+<p><a href="Images/docker-puttygen2.png" target="_blank"><img src="Images/docker-puttygen2.png" alt="Saving the public and private keys" style="max-width:100%;"></a></p>
+<p><em>Saving the public and private keys</em></p>
+</li>
+</ol>
+<p>You now have a pair of files containing a public key and a private key. Remember where these files are located, because you will need them in subsequent exercises.</p>
+<p><a name="Exercise2"></a></p>
+<h2>Exercise 2: Create a container service</h2>
+<p>Now that you have an SSH key pair, you can deploy an Azure Container Service. In this exercise, you will use the Azure Portal to create a container service for running Docker containers, and you will configure the service to use Docker Swarm. Swarm is a native Docker technology that creates a cluster of Docker Engine nodes allowing container workloads to be spread across multiple nodes in a cluster.</p>
+<ol>
+<li>
+<p>Open the <a href="https://portal.azure.com">Azure Portal</a> in your browser. If you are asked to log in, do so using your Microsoft account.</p>
+</li>
+<li>
+<p>Click <strong>+ New</strong>, followed by <strong>Containers</strong> and <strong>Azure Container Service</strong>.</p>
+<p><a href="Images/docker-new-container.png" target="_blank"><img src="Images/docker-new-container.png" alt="Creating a container service" style="max-width:100%;"></a></p>
+<p><em>Creating a container service</em></p>
+</li>
+<li>
+<p>Click the <strong>Create</strong> button at the bottom of the "Azure Container Service" blade. In the "Basics" blade, select <strong>Swarm</strong> as the orchestrator. Select <strong>Create new</strong> under <strong>Resource group</strong> and enter the resource-group name "OrchestrationLabResourceGroup" (without quotation marks). Select the location nearest you under <strong>Location</strong>, and then click the <strong>OK</strong> button.</p>
+<blockquote>
+<p>Swarm, DC/OS, and Kubernetes are popular open-source orchestration tools that enable you to deploy clusters containing thousands or even tens of thousands of containers. (Think of a compute cluster consisting of containers rather than physical servers, all sharing a load and running code in parallel.)  All three are preinstalled in Azure Container Service, with the goal being that you can use the one you are most familiar with rather than learn a new tool. Swarm is Docker's own native clustering tool.</p>
+</blockquote>
+<p><a href="Images/docker-acs-basics-swarm.png" target="_blank"><img src="Images/docker-acs-basics-swarm.png" alt="Basic settings" style="max-width:100%;"></a></p>
+<p><em>Basic settings</em></p>
+</li>
+<li>
+<p>In the "Master configuration" blade, enter a DNS name prefix in the <strong>DNS name prefix</strong> box. (The prefix doesn't have to be unique across Azure, but it does have to be unique to a data center. To ensure uniqueness, you should <em>include birth dates or other personal information</em> that is unlikely to be used by other people working these exercises. Otherwise, you may see a green check mark in the <strong>DNS name prefix</strong> box but still suffer a deployment failure.) Enter "dockeruser" (without quotation marks) for <strong>User name</strong> and the public key that you generated in <a href="#Exercise1">Exercise 1</a> for <strong>SSH public key</strong>. Then set <strong>Master count</strong> to <strong>1</strong> and click <strong>OK</strong>.</p>
+<blockquote>
+<p>You can retrieve the public key from the <strong>id_rsa.pub</strong> or <strong>public.txt</strong> file that you generated in Exercise 1 and paste it into <strong>SSH public key</strong> box.</p>
+</blockquote>
+<p><a href="Images/docker-acs-master-configuration.png" target="_blank"><img src="Images/docker-acs-master-configuration.png" alt="Master configuration settings" style="max-width:100%;"></a></p>
+<p><em>Master configuration settings</em></p>
+</li>
+<li>
+<p>In the "Agent configuration" blade, set <strong>Agent count</strong> to <strong>2</strong>. Then click <strong>OK</strong>.</p>
+<blockquote>
+<p>When you create an Azure Container Service, one or more master VMs are created to orchestrate the workload. In addition, an <a href="https://azure.microsoft.com/en-us/documentation/articles/virtual-machine-scale-sets-overview/">Azure Virtual Machine Scale Set</a> is created to provide VMs for the "agents," or VMs that the master VMs delegate work to. Docker container instances are hosted in the agent VMs. By default, Azure uses a standard DS2 virtual machine for each agent. These are dual-core machines with 7 GB of RAM. Agent VMs are created as needed to handle the workload. In this example, there will be one master VM and up to two agent VMs.</p>
+</blockquote>
+<p><a href="Images/docker-acs-agent-configuration.png" target="_blank"><img src="Images/docker-acs-agent-configuration.png" alt="Agent configuration settings" style="max-width:100%;"></a></p>
+<p><em>Agent configuration settings</em></p>
+</li>
+<li>
+<p>In the "Summary" blade, review the settings you selected. Then click <strong>OK</strong>.</p>
+<p><a href="Images/docker-acs-summary.png" target="_blank"><img src="Images/docker-acs-summary.png" alt="Settings summary" style="max-width:100%;"></a></p>
+<p><em>Settings summary</em></p>
+</li>
+<li>
+<p>Deployment typically takes 5 to 10 minutes. You can monitor the status of the deployment by opening the blade for the resource group created for the container service. Click <strong>Resource groups</strong> in the ribbon on the left. Then click the resource group named "OrchestrationLabResourceGroup."</p>
+<p><a href="Images/open-resource-group.png" target="_blank"><img src="Images/open-resource-group.png" alt="Opening the resource group" style="max-width:100%;"></a></p>
+<p><em>Opening the resource group</em></p>
+</li>
+<li>
+<p>Wait until "Deploying" changes to "Succeeded," indicating that the service has been successfully deployed.</p>
+<blockquote>
+<p>Click the browser's <strong>Refresh</strong> button occasionally to update the deployment status. Clicking the <strong>Refresh</strong> button in the resource-group blade refreshes the list of resources in the resource group, but does not reliably update the deployment status.</p>
+</blockquote>
+<p><a href="Images/deployment-succeeded.png" target="_blank"><img src="Images/deployment-succeeded.png" alt="Successful deployment" style="max-width:100%;"></a></p>
+<p><em>Successful deployment</em></p>
+</li>
+</ol>
+<p>When the deployment completes successfully, you are ready to proceed. The next step is to get the fully qualified domain name of the master node in preparation for opening a secure connection to the service.</p>
+<p><a name="Exercise3"></a></p>
+<h2>Exercise 3: Record fully qualified domain names</h2>
+<p>In this exercise, you will retrieve fully qualified domain names (FQDNs) for the master node and agent node of the container service you deployed in the previous exercise.</p>
+<ol>
+<li>
+<p>In the blade for the "OrchestrationLabResourceGroup" resource group, click the container service.</p>
+<p><a href="Images/open-container-service.png" target="_blank"><img src="Images/open-container-service.png" alt="Opening the container service" style="max-width:100%;"></a></p>
+<p><em>Opening the container service</em></p>
+</li>
+<li>
+<p>Hover the mouse pointer over the master fully qualified domain name. When a <strong>Copy</strong> button appears, click it to copy the domain name to the clipboard. Then <strong>paste the name into your favorite text editor so you can retrieve it later</strong>. This is the <strong>master FQDN</strong>.</p>
+<p><a href="Images/copy-master-fqdn.png" target="_blank"><img src="Images/copy-master-fqdn.png" alt="Copying the master FQDN to the clipboard" style="max-width:100%;"></a></p>
+<p><em>Copying the master FQDN to the clipboard</em></p>
+</li>
+<li>
+<p>Copy the fully qualified domain name of the agent node to the clipboard and save it in your favorite text editor so you can retrieve it later. This is the <strong>agent FQDN</strong>.</p>
+<p><a href="Images/copy-agent-fqdn.png" target="_blank"><img src="Images/copy-agent-fqdn.png" alt="Copying the agent FQDN to the clipboard" style="max-width:100%;"></a></p>
+<p><em>Copying the agent FQDN to the clipboard</em></p>
+</li>
+</ol>
+<p>You will use the <strong>master FQDN</strong> in the next exercise to establish an SSH tunnel to the master node. You will use the <strong>agent FQDN</strong> in <a href="#Exercise5">Exercise 5</a> to connect to a PHP Web app running in a container in the agent node.</p>
+<p><a name="Exercise4"></a></p>
+<h2>Exercise 4: Connect to the master node</h2>
+<p>In this exercise, you will establish an SSH connection to the master node of the container service you deployed in <a href="#Exercise2">Exercise 2</a> so you can use the Docker client to execute Docker commands in Azure.</p>
+<ol>
+<li>
+<p><strong>If you are running Windows, skip to Step 5</strong>. Otherwise, proceed to Step 2.</p>
+</li>
+<li>
+<p>On your Mac or Linux machine, return to the terminal window you opened in Exercise 1 and make sure you are still in the ".ssh" directory containing the key pair that you generated.</p>
+</li>
+<li>
+<p>Execute the following command to SSH in to the master node, replacing <em>master-fqdn</em> with the <strong>master FQDN</strong> that you saved in Exercise 3, Step 2:</p>
+ <pre>ssh -L 22375:localhost:2375 dockeruser@<i>master-fqdn</i></pre>
+<blockquote>
+<p>The purpose of the -L switch is to forward traffic transmitted through port 22375 on the local machine (that's the port used by the <strong>docker</strong> command you will be using shortly) to port 2375 at the other end. Docker Swarm listens on port 2375.</p>
+</blockquote>
+</li>
+<li>
+<p>If asked to confirm that you wish to connect, answer yes. Once connected, leave the terminal window open and <strong>proceed to <a href="#Exercise5">Exercise 5</a>. The remaining steps in this exercise are for Windows users only</strong>.</p>
+</li>
+<li>
+<p>Launch PuTTY and paste the <strong>master FQDN</strong> that you saved in Exercise 3, Step 2 into the <strong>Host Name (or IP address)</strong> box.</p>
+<p><a href="Images/putty-1.png" target="_blank"><img src="Images/putty-1.png" alt="Configuring a PuTTY session" style="max-width:100%;"></a></p>
+<p><em>Configuring a PuTTY session</em></p>
+</li>
+<li>
+<p>In the treeview on the left, click <strong>Data</strong>. Then type the SSH user name "dockeruser" (without quotation marks) into the <strong>Auto-login username</strong> box.</p>
+<p><a href="Images/putty-2.png" target="_blank"><img src="Images/putty-2.png" alt="Specifying the SSH user name" style="max-width:100%;"></a></p>
+<p><em>Specifying the SSH user name</em></p>
+</li>
+<li>
+<p>Click the + sign next to <strong>SSH</strong>, and then click <strong>Auth</strong>. Click the  <strong>Browse</strong> button and select the private-key file that you created in <a href="#Exercise1">Exercise 1</a>.</p>
+<p><a href="Images/putty-3.png" target="_blank"><img src="Images/putty-3.png" alt="Entering the private key" style="max-width:100%;"></a></p>
+<p><em>Entering the private key</em></p>
+</li>
+<li>
+<p>Select <strong>Tunnels</strong> in the treeview. Then set <strong>Source port</strong> to <strong>22375</strong> and <strong>Destination</strong> to <strong>127.0.0.1:2375</strong>, and click the <strong>Add</strong> button. Then click the <strong>Open</strong> button to open a connection to the master node. If you are warned that the server's host key isn't cached in the registry and asked to confirm that you want to connect anyway, click <strong>Yes</strong>.</p>
+<blockquote>
+<p>The purpose of this is to forward traffic transmitted through port 22375 on the local machine (that's the port used by the <strong>docker</strong> command you will be using shortly) to port 2375 at the other end. Docker Swarm listens on port 2375.</p>
+</blockquote>
+<p><a href="Images/putty-4.png" target="_blank"><img src="Images/putty-4.png" alt="Configuring the SSH tunnel" style="max-width:100%;"></a></p>
+<p><em>Configuring the SSH tunnel</em></p>
+</li>
+<li>
+<p>Confirm that an SSH window opens and logs you in, as shown below.</p>
+<blockquote>
+<p>Observe that you didn't have to enter a password. That's because the connection was authenticated using the public/private key pair you generated in Exercise 1. Key pairs tend to be much more secure than passwords because they are cryptographically strong. You also didn't have to enter a user name because you provided the user name to PuTTY in Step 6.</p>
+</blockquote>
+<p><a href="Images/putty-5.png" target="_blank"><img src="Images/putty-5.png" alt="The SSH terminal window" style="max-width:100%;"></a></p>
+<p><em>he SSH terminal window</em></p>
+</li>
+</ol>
+<p>Now that you're connected, you can run the Docker client on your local machine and use port forwarding to execute commands in the Azure Container Service. Leave the SSH window open while you work through the next exercise.</p>
+<p><a name="Exercise5"></a></p>
+<h2>Exercise 5: Create a Docker image, push it to Docker Hub, and run it in a container</h2>
+<p>The next step is to build a container image and upload it to an image repository. <a href="https://hub.docker.com/">Docker Hub</a> is Docker's public image repository, and it is basically the mother of all other Docker repositories. Most custom Docker images originate from a base image stored in Docker Hub. The "resources" folder of this lab contains a simple PHP app that shows system information regarding the host server in a Web page. Accompanying the app is a file named <strong>Dockerfile</strong>, which contains instructions for building a Docker image. This Dockerfile is simple: it starts with a base image for PHP and exposes a TCP port for the Web server.</p>
+<p>In this exercise, you will build a Docker image and push it to Docker Hub. Then you will run the image in a container hosted in Azure.</p>
+<ol>
+<li>
+<p>Open a terminal window (macOS or Linux) or a Command Prompt window (Windows) and navigate to the "resources" folder of this lab. It contains the files that you will build into a container image.</p>
+</li>
+<li>
+<p>If you are running macOS or Linux, execute the following command in the terminal window:</p>
+ <pre>export DOCKER_HOST=localhost:22375</pre>
+<p>If you are running Windows instead, execute this command in the Command Prompt window:</p>
+ <pre>set DOCKER_HOST=localhost:22375</pre>
+<blockquote>
+<p>This command directs the Docker client to send output to localhost port 22375, which you redirected to port 2375 in the Azure Container Service in the previous exercise. Remember that port 2375 is the one Docker Swarm listens on. The commands that you execute in the next few steps are typed into a local terminal window, but they are <strong>executed in the container service you deployed to the cloud</strong> using the SSH tunnel that you established in the previous exercise.</p>
+</blockquote>
+</li>
+<li>
+<p>In the Command prompt or terminal window, execute the following command to log into Docker Hub. When prompted, enter your Docker ID and password.</p>
+<blockquote>
+<p>If you don't have a Docker ID, you can <a href="https://hub.docker.com/">sign up for one</a> at no cost.</p>
+</blockquote>
+<pre><code>docker login
+</code></pre>
+</li>
+<li>
+<p>Make sure you are in this lab's "resources" directory. Then use the following command to build a Docker image from the files in the current directory, substituting your Docker ID for <em>dockerid</em>. This is the same Docker ID you used to sign in to Docker Hub in the previous step.</p>
+ <pre>docker build --tag <i>dockerid</i>/container-info --no-cache .</pre>
+<p>This command uploads the files in the current directory to the Docker Engine running on Azure. The Docker Engine then builds a Docker image using the commands in the Dockerfile and stores the image in a local repository.</p>
+</li>
+<li>
+<p>Now use the following command to push the image to Docker Hub, once more substituting your Docker ID for <em>dockerid</em>.</p>
+ <pre>docker push <i>dockerid</i>/container-info</pre>
+<blockquote>
+<p>If you would like to view the image in Docker Hub, simply point your browser to <a href="https://hub.docker.com/r/dockerid/container-info/">https://hub.docker.com/r/dockerid/container-info/</a> and substitute your Docker ID for <em>dockerid</em>.</p>
+</blockquote>
+</li>
+<li>
+<p>Next, use the following command to create a container from the image pushed to Docker Hub and run  the container, again substituting your Docker ID for <em>dockerid</em>:</p>
+ <pre>docker run -dit --name c-info -p 80:80 <i>dockerid</i>/container-info</pre>
+</li>
+<li>
+<p>Open a browser and paste the <strong>agent FQDN</strong> that you saved in Exercise 3, Step 3 into the browser's address bar. Notice the information displayed in the browser window, particularly the system information on line 1. Can you guess what operating system is installed in the agent VM?</p>
+<p><a href="Images/dcos-9.png" target="_blank"><img src="Images/dcos-9.png" alt="Web page served up by a PHP app running in a container managed by Swarm in Azure" style="max-width:100%;"></a></p>
+<p><em>Web page served up by a PHP app running in a container managed by Swarm in Azure</em></p>
+</li>
+</ol>
+<p>At the moment, there is only one container instance running in the agent VM. Docker Swarm is capable of deploying multiple container instances and load-balancing requests targeting those instances, but the version of Docker Swarm currently installed on the cluster lacks these capabilities. Not to fear, however; you will soon be launching multiple container instances using DC/OS and Kubernetes.</p>
+<p><a name="Exercise6"></a></p>
+<h2>Exercise 6: Delete the resource group</h2>
+<p>In this exercise, you will delete the resource group created in <a href="#Exercise2">Exercise 2</a>. Deleting the resource group deletes everything in it and prevents any further charges from being incurred for it, including for the VMs deployed as part of the container service.</p>
+<ol>
+<li>
+<p>In the Azure Portal, open the blade for the "OrchestrationLabResourceGroup" resource group. Then click the <strong>Delete</strong> button at the top of the blade.</p>
+<p><a href="Images/delete-resource-group.png" target="_blank"><img src="Images/delete-resource-group.png" alt="Deleting a resource group" style="max-width:100%;"></a></p>
+<p><em>Deleting a resource group</em></p>
+</li>
+<li>
+<p>For safety, you are required to type in the resource group's name. (Once deleted, a resource group cannot be recovered.) Type the name of the resource group. Then click the <strong>Delete</strong> button to remove all traces of this lab from your account.</p>
+</li>
+</ol>
+<p>After a few minutes, you will be notified that the resource group was deleted. If the deleted resource group still appears in the "Resource groups" blade, click that blade's <strong>Refresh</strong> button to update the list of resource groups. The deleted resource group should go away.</p>
+<p><a name="Exercise7"></a></p>
+<h2>Exercise 7: Orchestrate with DC/OS</h2>
+<p>In this exercise, you will deploy a new container service and use <a href="https://dcos.io/">DC/OS</a> for orchestration. DC/OS stands for Datacenter Operating System and is built on top of <a href="http://mesos.apache.org/">Apache Mesos</a>. DC/OS abstracts the underlying operating system and supports many of the functions typically performed by operating systems across multiple nodes on a cluster. Containers are one such resource that can be managed by DC/OS. In Azure, DC/OS is tailored for this purpose.</p>
+<ol>
+<li>
+<p>Repeat the steps in <a href="#Exercise2">Exercise 2</a>, but this time choose <strong>DC/OS</strong> as the orchestrator in Step 3.</p>
+<p><a href="Images/docker-acs-basics-dcos.png" target="_blank"><img src="Images/docker-acs-basics-dcos.png" alt="Creating a container service with DC/OS" style="max-width:100%;"></a></p>
+<p><em>Creating a container service with DC/OS</em></p>
+</li>
+<li>
+<p>Repeat <a href="#Exercise3">Exercise 3</a> to obtain the <strong>master FQDN</strong> and <strong>agent FQDN</strong> for the container service.</p>
+<p><a href="Images/fqdns-dcos.png" target="_blank"><img src="Images/fqdns-dcos.png" alt="Copying the master and agent FQDNs" style="max-width:100%;"></a></p>
+<p><em>Copying the master and agent FQDNs</em></p>
+</li>
+<li>
+<p>Repeat <a href="#Exercise4">Exercise 4</a> to connect to the master node. For macOS and Linux, modify the command in Exercise 4, Step 3 to forward port 8000 to localhost:80:</p>
+ <pre>ssh -L 8000:localhost:80 dockeruser@<i>master-fqdn</i></pre>
+<p>For Windows, modify Exercise 4, Step 8 by setting <strong>Source port</strong> to <strong>8000</strong> and <strong>Destination</strong> to <strong>localhost:80</strong>, as shown below.</p>
+<p><a href="Images/putty-6.png" target="_blank"><img src="Images/putty-6.png" alt="Configuring the SSH tunnel" style="max-width:100%;"></a></p>
+<p><em>Configuring the SSH tunnel</em></p>
+</li>
+<li>
+<p>Open a browser and enter <a href="http://localhost:8000">http://localhost:8000</a> into the address bar. This will load the DC/OS dashboard.</p>
+<blockquote>
+<p>The <em>localhost</em> in the URL implies that the DC/OS dashboard is running locally, but it's not. Calls to port 8000 on the local machine are being redirected to the remote machine through the SSH tunnel that you established.</p>
+</blockquote>
+<p><a href="Images/dcos-dashboard.png" target="_blank"><img src="Images/dcos-dashboard.png" alt="The DC/OS dashboard" style="max-width:100%;"></a></p>
+<p><em>The DC/OS dashboard</em></p>
+</li>
+<li>
+<p>The next step is to install a load balancer on DC/OS so that it can balance and monitor incoming requests to containers. In the dashboard, click <strong>Universe</strong>. Then type "marathon-lb" into the search box and click <strong>Install</strong> to install the <a href="https://docs.mesosphere.com/1.8/usage/service-discovery/marathon-lb/">Marathon load balancer</a>.</p>
+<p><a href="Images/dcos-4.png" target="_blank"><img src="Images/dcos-4.png" alt="Installing the Marathon load balancer" style="max-width:100%;"></a></p>
+<p><em>Installing the Marathon load balancer</em></p>
+</li>
+<li>
+<p>Click <strong>Install Package</strong> to proceed with the installation. Once installation is complete, click <strong>OK</strong> to dismiss the success dialog.</p>
+<p><a href="Images/dcos-5.png" target="_blank"><img src="Images/dcos-5.png" alt="Starting the installation" style="max-width:100%;"></a></p>
+<p><em>Starting the installation</em></p>
+</li>
+<li>
+<p>Navigate to <a href="http://localhost:8000/marathon">http://localhost:8000/marathon</a> in your browser. This will load the console for <a href="https://github.com/mesosphere/marathon">Marathon</a>, which is used for orchestration on DC/OS. You will see that marathon-lb is already listed under Applications. Click the <strong>Create Application</strong> button.</p>
+<p><a href="Images/dcos-7.png" target="_blank"><img src="Images/dcos-7.png" alt="Creating an application" style="max-width:100%;"></a></p>
+<p><em>Creating an application</em></p>
+</li>
+<li>
+<p>Click <strong>JSON Mode</strong> in the upper-right corner. Then paste in the following JSON, replacing <em>dockerid</em> in line 6 with your Docker ID and <em>agent-fqdn</em> on line 28 with the <strong>agent FQDN</strong> from Step 2. Then click <strong>Create Application</strong>. This will begin the process of starting 10 container instances.</p>
+<div class="highlight highlight-source-json"><pre>{
+  <span class="pl-s"><span class="pl-pds">"</span>id<span class="pl-pds">"</span></span>: <span class="pl-s"><span class="pl-pds">"</span>info<span class="pl-pds">"</span></span>,
+  <span class="pl-s"><span class="pl-pds">"</span>container<span class="pl-pds">"</span></span>: {
+    <span class="pl-s"><span class="pl-pds">"</span>type<span class="pl-pds">"</span></span>: <span class="pl-s"><span class="pl-pds">"</span>DOCKER<span class="pl-pds">"</span></span>,
+    <span class="pl-s"><span class="pl-pds">"</span>docker<span class="pl-pds">"</span></span>: {
+      <span class="pl-s"><span class="pl-pds">"</span>image<span class="pl-pds">"</span></span>: <span class="pl-s"><span class="pl-pds">"</span>dockerid/container-info<span class="pl-pds">"</span></span>,
+      <span class="pl-s"><span class="pl-pds">"</span>network<span class="pl-pds">"</span></span>: <span class="pl-s"><span class="pl-pds">"</span>BRIDGE<span class="pl-pds">"</span></span>,
+      <span class="pl-s"><span class="pl-pds">"</span>portMappings<span class="pl-pds">"</span></span>: [
+        { <span class="pl-s"><span class="pl-pds">"</span>hostPort<span class="pl-pds">"</span></span>: <span class="pl-c1">0</span>, <span class="pl-s"><span class="pl-pds">"</span>containerPort<span class="pl-pds">"</span></span>: <span class="pl-c1">80</span>, <span class="pl-s"><span class="pl-pds">"</span>servicePort<span class="pl-pds">"</span></span>: <span class="pl-c1">10000</span> }
+      ],
+      <span class="pl-s"><span class="pl-pds">"</span>forcePullImage<span class="pl-pds">"</span></span>:<span class="pl-c1">true</span>
+    }
+  },
+  <span class="pl-s"><span class="pl-pds">"</span>instances<span class="pl-pds">"</span></span>: <span class="pl-c1">10</span>,
+  <span class="pl-s"><span class="pl-pds">"</span>cpus<span class="pl-pds">"</span></span>: <span class="pl-c1">0.5</span>,
+  <span class="pl-s"><span class="pl-pds">"</span>mem<span class="pl-pds">"</span></span>: <span class="pl-c1">128</span>,
+  <span class="pl-s"><span class="pl-pds">"</span>healthChecks<span class="pl-pds">"</span></span>: [{
+      <span class="pl-s"><span class="pl-pds">"</span>protocol<span class="pl-pds">"</span></span>: <span class="pl-s"><span class="pl-pds">"</span>HTTP<span class="pl-pds">"</span></span>,
+      <span class="pl-s"><span class="pl-pds">"</span>path<span class="pl-pds">"</span></span>: <span class="pl-s"><span class="pl-pds">"</span>/<span class="pl-pds">"</span></span>,
+      <span class="pl-s"><span class="pl-pds">"</span>portIndex<span class="pl-pds">"</span></span>: <span class="pl-c1">0</span>,
+      <span class="pl-s"><span class="pl-pds">"</span>timeoutSeconds<span class="pl-pds">"</span></span>: <span class="pl-c1">10</span>,
+      <span class="pl-s"><span class="pl-pds">"</span>gracePeriodSeconds<span class="pl-pds">"</span></span>: <span class="pl-c1">10</span>,
+      <span class="pl-s"><span class="pl-pds">"</span>intervalSeconds<span class="pl-pds">"</span></span>: <span class="pl-c1">2</span>,
+      <span class="pl-s"><span class="pl-pds">"</span>maxConsecutiveFailures<span class="pl-pds">"</span></span>: <span class="pl-c1">10</span>
+  }],
+  <span class="pl-s"><span class="pl-pds">"</span>labels<span class="pl-pds">"</span></span>:{
+    <span class="pl-s"><span class="pl-pds">"</span>HAPROXY_GROUP<span class="pl-pds">"</span></span>:<span class="pl-s"><span class="pl-pds">"</span>external<span class="pl-pds">"</span></span>,
+    <span class="pl-s"><span class="pl-pds">"</span>HAPROXY_0_VHOST<span class="pl-pds">"</span></span>:<span class="pl-s"><span class="pl-pds">"</span>agent-fqdn<span class="pl-pds">"</span></span>,
+    <span class="pl-s"><span class="pl-pds">"</span>HAPROXY_0_MODE<span class="pl-pds">"</span></span>:<span class="pl-s"><span class="pl-pds">"</span>http<span class="pl-pds">"</span></span>
+  }
+}</pre></div>
+<p><a href="Images/dcos-8.png" target="_blank"><img src="Images/dcos-8.png" alt="Creating the new application" style="max-width:100%;"></a></p>
+<p><em>Creating the new application</em></p>
+</li>
+<li>
+<p>Open a new browser window and paste the <strong>agent FQDN</strong> into the address bar to connect to the PHP app running in a container managed by DC/OS. Refresh the page a few times. Notice how the info on the first line changes each time. This is because the load balancer is redirecting to a different container with each refresh.</p>
+<p><a href="Images/dcos-9.png" target="_blank"><img src="Images/dcos-9.png" alt="Web page served up by a PHP app running in a container managed by DC/OS in Azure" style="max-width:100%;"></a></p>
+<p><em>Web page served up by a PHP app running in a container managed by DC/OS in Azure</em></p>
+</li>
+</ol>
+<p>Finish up by repeating <a href="#Exercise6">Exercise 6</a> to delete the resource group. You will be creating a new container service in the next exercise.</p>
+<p><a name="Exercise8"></a></p>
+<h2>Exercise 8: Orchestrate with Kubernetes</h2>
+<p>In this exercise, you will deploy a new container service that uses <a href="https://kubernetes.io/">Kubernetes</a> for orchestration. Kubernetes is Google's homegrown orchestration engine. The project started to meet a need within Google, but its popularity grew such that Google released it as open source. It is quickly becoming a popular orchestration platform and has recently been added to the Azure Container Service. Kubernetes is slightly different from DC/OS and Swarm because it can control some of the resources on the Azure deployment that is hosting it. To do this, it requires a <em>service principal</em>, which is in effect a delegate that can access an Azure subscription.</p>
+<ol>
+<li>
+<p>In the Azure Portal, click <strong>Azure Active Directory</strong> in the ribbon on the left. Then click <strong>App registrations</strong>, followed by <strong>Add</strong>.</p>
+<p><a href="Images/add-kubernetes-app.png" target="_blank"><img src="Images/add-kubernetes-app.png" alt="Adding an app registration" style="max-width:100%;"></a></p>
+<p><em>Adding an app registration</em></p>
+</li>
+<li>
+<p>In the "Create" blade, enter "Kubernetes" as the app name and "<a href="http://localhost">http://localhost</a>" as the sign-on URL. Then click <strong>Create</strong>.</p>
+<p><a href="Images/create-kubernetes-app.png" target="_blank"><img src="Images/create-kubernetes-app.png" alt="Registering a Kubernetes app" style="max-width:100%;"></a></p>
+<p><em>Registering a Kubernetes app</em></p>
+</li>
+<li>
+<p>Click <strong>Kubernetes</strong>.</p>
+<p><a href="Images/open-kubernetes-app.png" target="_blank"><img src="Images/open-kubernetes-app.png" alt="Opening the Kubernetes app" style="max-width:100%;"></a></p>
+<p><em>Opening the Kubernetes app</em></p>
+</li>
+<li>
+<p>Click <strong>Keys</strong>. Type "key1" into the <strong>Description</strong> field and set <strong>Expires</strong> to <strong>Never expires</strong>. Then click <strong>Save</strong>.</p>
+<p><a href="Images/add-kubernetes-key.png" target="_blank"><img src="Images/add-kubernetes-key.png" alt="Adding an application key" style="max-width:100%;"></a></p>
+<p><em>Adding an application key</em></p>
+</li>
+<li>
+<p>Copy <strong>key1</strong>'s value to the clipboard and paste it into your favorite text editor. <strong>You will not be able to retrieve this key again from the Azure Portal</strong>.</p>
+<p><a href="Images/copy-kubernetes-key.png" target="_blank"><img src="Images/copy-kubernetes-key.png" alt="Copying the application key" style="max-width:100%;"></a></p>
+<p><em>Copying the application key</em></p>
+</li>
+<li>
+<p>Return to the blade for the "Kubernetes" app and copy the application ID to the clipboard. Then paste the application ID into a text editor so you can retrieve it later.</p>
+<p><a href="Images/copy-app-id.png" target="_blank"><img src="Images/copy-app-id.png" alt="Copying the application ID" style="max-width:100%;"></a></p>
+<p><em>Copying the application ID</em></p>
+</li>
+<li>
+<p>Now click <strong>Subscriptions</strong> in the ribbon on the left side of the portal and select the subscription that you are using for this lab.</p>
+<p><a href="Images/open-subscription.png" target="_blank"><img src="Images/open-subscription.png" alt="Choosing a subscription" style="max-width:100%;"></a></p>
+<p><em>Choosing a subscription</em></p>
+</li>
+<li>
+<p>Click <strong>Access control (IAM)</strong>, and then click <strong>Add</strong>.</p>
+<p><a href="Images/add-user-1.png" target="_blank"><img src="Images/add-user-1.png" alt="Adding a user to the subscription" style="max-width:100%;"></a></p>
+<p><em>Adding a user to the subscription</em></p>
+</li>
+<li>
+<p>Click <strong>Contributor</strong>.</p>
+<p><a href="Images/add-user-2.png" target="_blank"><img src="Images/add-user-2.png" alt="Defining the user's role" style="max-width:100%;"></a></p>
+<p><em>Defining the user's role</em></p>
+</li>
+<li>
+<p>Type "kubernetes" into the search box and select <strong>Kubernetes</strong>. Then click the <strong>Select</strong> button at the bottom of the "Add Users" blade, followed by the <strong>OK</strong> button at the bottom of the "Add access" blade.</p>
+<p><a href="Images/add-user-3.png" target="_blank"><img src="Images/add-user-3.png" alt="Specifying which user to add" style="max-width:100%;"></a></p>
+<p><em>Specifying which user to add</em></p>
+</li>
+<li>
+<p>Repeat <a href="#Exercise2">Exercise 2</a> to deploy a new container service, but with the following changes:</p>
+<ul>
+<li>
+<p>In Step 3, choose <strong>Kubernetes</strong> as the orchestrator.</p>
+<p><a href="Images/docker-acs-basics-kubernetes.png" target="_blank"><img src="Images/docker-acs-basics-kubernetes.png" alt="Creating a container service with Kubernetes" style="max-width:100%;"></a></p>
+<p><em>Creating a container service with Kubernetes</em></p>
+</li>
+<li>
+<p>In Step 4, enter the application ID you saved in Step 6 of this exercise for <strong>Service principal client ID</strong>, and the key value you saved in Step 5 of this exercise for <strong>Service principal client secret</strong>.</p>
+<p><a href="Images/docker-acs-master-configuration-kubernetes.png" target="_blank"><img src="Images/docker-acs-master-configuration-kubernetes.png" alt="Master configuration settings" style="max-width:100%;"></a></p>
+<p><em>Master configuration settings</em></p>
+</li>
+<li>
+<p>In Step 5, select <strong>Linux</strong> as the operating system.</p>
+<p><a href="Images/docker-acs-agent-configuration-kubernetes.png" target="_blank"><img src="Images/docker-acs-agent-configuration-kubernetes.png" alt="Agent configuration settings" style="max-width:100%;"></a></p>
+<p><em>Agent configuration settings</em></p>
+</li>
+</ul>
+</li>
+<li>
+<p>Repeat <a href="#Exercise3">Exercise 3</a> to obtain the <strong>master FQDN</strong> for the container service. Note that there is no agent FQDN in this case.</p>
+<p><a href="Images/fqdns-kubernetes.png" target="_blank"><img src="Images/fqdns-kubernetes.png" alt="Copying the master FQDN" style="max-width:100%;"></a></p>
+<p><em>Copying the master FQDN</em></p>
+</li>
+<li>
+<p>Repeat <a href="#Exercise4">Exercise 4</a> to connect to the master node. For macOS and Linux, modify the command in Exercise 4, Step 3 to forward port 8001 to localhost:8001:</p>
+ <pre>ssh -L 8001:localhost:8001 dockeruser@<i>master-fqdn</i></pre>
+<p>For Windows, modify Exercise 4, Step 8 by setting <strong>Source port</strong> to <strong>8001</strong> and <strong>Destination</strong> to <strong>localhost:8001</strong>, as shown below.</p>
+<p><a href="Images/putty-7.png" target="_blank"><img src="Images/putty-7.png" alt="Configuring the SSH tunnel" style="max-width:100%;"></a></p>
+<p><em>Configuring the SSH tunnel</em></p>
+</li>
+<li>
+<p>Once the SSH client is connected, you need to create a proxy to access Kubernetes. In the SSH terminal window, execute the following command:</p>
+<pre><code>kubectl proxy
+</code></pre>
+</li>
+<li>
+<p>Open a browser window and navigate to <a href="http://localhost:8001/ui">http://localhost:8001/ui</a> to open the Kubernetes console. Then click <strong>+ Create</strong>.</p>
+<p><a href="Images/kubernetes-1.png" target="_blank"><img src="Images/kubernetes-1.png" alt="Creating an app in Kubernetes" style="max-width:100%;"></a></p>
+<p><em>Creating an app in Kubernetes</em></p>
+</li>
+<li>
+<p>Enter "container-info" for the <strong>App name</strong> and "<em>dockerid</em>/container-info" for <strong>Container image</strong>, replacing <em>dockerid</em> with your Docker ID. Enter <strong>10</strong> for <strong>Number of pods</strong> and set <strong>Service</strong> to <strong>External</strong>. Set <strong>Port</strong> to <strong>80</strong> and <strong>Target port</strong> to <strong>80</strong>. Then click <strong>Deploy</strong>.</p>
+<blockquote>
+<p>Setting the number of pods to 10 tells Kubernetes to deploy 10 container instances.</p>
+</blockquote>
+<p><a href="Images/kubernetes-2.png" target="_blank"><img src="Images/kubernetes-2.png" alt="Deploying a containerized app" style="max-width:100%;"></a></p>
+<p><em>Deploying a containerized app</em></p>
+</li>
+<li>
+<p>Wait until several containers have been deployed and have a status of "Running." Refresh the page in the browser periodically to update the status.</p>
+<p><a href="Images/kubernetes-status.png" target="_blank"><img src="Images/kubernetes-status.png" alt="Monitoring the deployment status" style="max-width:100%;"></a></p>
+<p><em>Monitoring the deployment status</em></p>
+</li>
+<li>
+<p>Click <strong>Services</strong> in the navigation bar, and then click the IP address under <strong>External endpoints</strong> to connect to a running container instance.</p>
+<p><a href="Images/kubernetes-3.png" target="_blank"><img src="Images/kubernetes-3.png" alt="Connecting to a running container" style="max-width:100%;"></a></p>
+<p><em>Connecting to a running container</em></p>
+</li>
+<li>
+<p>Click the IP address under <strong>External endpoints</strong> several more times to open multiple browser tabs. Observe that the system info on line 1 is different for each tab. That's because each tab is connected to a different container instance.</p>
+<p><a href="Images/kubernetes-4.png" target="_blank"><img src="Images/kubernetes-4.png" alt="Web page served up by a PHP app running in a container managed by Kubernetes in Azure" style="max-width:100%;"></a></p>
+<p><em>Web page served up by a PHP app running in a container managed by Kubernetes in Azure</em></p>
+</li>
+</ol>
+<p>Finish up by repeating <a href="#Exercise6">Exercise 6</a> to delete the resource group and avoid incurring any additional charges for this lab.</p>
+<p><a name="Summary"></a></p>
+<h2>Summary</h2>
+<p>In this lab, you created a Docker container image, pushed it to Docker Hub, and deployed it to the three different container services configured with different orchestration tools. Swarm, DC/OS, and Kubernetes work differently, but each provides a solution to managing "swarms" of containers on clusters of virtual or physical machines. And each is supported natively in Azure. To learn more about these tools and the features that they offer, check out the documentation for <a href="https://docs.docker.com/engine/swarm/">Swarm</a>, <a href="https://dcos.io/">DC/OS</a> and <a href="https://kubernetes.io/">Kubernetes</a>, respectively.</p>
+<hr>
+<p>Copyright 2017 Microsoft Corporation. All rights reserved. Except where otherwise noted, these materials are licensed under the terms of the MIT License. You may use them according to the license as is most appropriate for your project. The terms of this license can be found at <a href="https://opensource.org/licenses/MIT">https://opensource.org/licenses/MIT</a>.</p>
+</body>
+</html>
+<!-- This document was created with MarkdownPad, the Markdown editor for Windows (http://markdownpad.com) -->
