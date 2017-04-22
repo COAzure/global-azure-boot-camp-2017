@@ -334,8 +334,6 @@ There is no need to stop the agent VMs. They are part of an [Azure Virtual Machi
 
 Resource groups are a useful feature of Azure because they simplify the task of managing related resources. One of the most practical reasons to use resource groups is that deleting a resource group deletes all the resources it contains. Rather than delete those resources one by one, you can delete them all at once.
 
-> If you plan on doing **Session 2 - Docker Orchestration and the Azure Container Service**, you may want to skip this step instead of deleting and re-creating yourAzure Container Service.
-
 In this exercise, you will delete the resource group created in [Exercise 2](#Exercise2) when you created the container service. Deleting the resource group deletes everything in it and prevents any further charges from being incurred for it.
 
 1. In the Azure Portal, open the blade for the "ACSLabResourceGroup" resource group. Then click the **Delete** button at the top of the blade.
